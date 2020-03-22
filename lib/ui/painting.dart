@@ -40,7 +40,7 @@ bool _offsetIsValid(Offset offset) {
   return true;
 }
 
-bool _matrix4IsValid(Float64List matrix4) {
+bool _matrix4IsValid(Float32List matrix4) {
   assert(matrix4 != null, 'Matrix4 argument was null.');
   assert(matrix4.length == 16, 'Matrix4 must have 16 entries.');
   assert(matrix4.every((double value) => value.isFinite), 'Matrix4 entries must be finite.');
@@ -2114,7 +2114,7 @@ class Path extends NativeFieldWrapperClass2 {
   /// If `matrix4` is specified, the path will be transformed by this matrix
   /// after the matrix is translated by the given offset. The matrix is a 4x4
   /// matrix stored in column major order.
-  void addPath(Path path, Offset offset, {Float64List matrix4}) {
+  void addPath(Path path, Offset offset, {Float32List matrix4}) {
     assert(path != null); // path is checked on the engine side
     assert(_offsetIsValid(offset));
     if (matrix4 != null) {
@@ -2125,7 +2125,7 @@ class Path extends NativeFieldWrapperClass2 {
     }
   }
   void _addPath(Path path, double dx, double dy) native 'Path_addPath';
-  void _addPathWithMatrix(Path path, double dx, double dy, Float64List matrix) native 'Path_addPathWithMatrix';
+  void _addPathWithMatrix(Path path, double dx, double dy, Float32List matrix) native 'Path_addPathWithMatrix';
 
   /// Adds the given path to this path by extending the current segment of this
   /// path with the first segment of the given path.
@@ -2133,7 +2133,7 @@ class Path extends NativeFieldWrapperClass2 {
   /// If `matrix4` is specified, the path will be transformed by this matrix
   /// after the matrix is translated by the given `offset`.  The matrix is a 4x4
   /// matrix stored in column major order.
-  void extendWithPath(Path path, Offset offset, {Float64List matrix4}) {
+  void extendWithPath(Path path, Offset offset, {Float32List matrix4}) {
     assert(path != null); // path is checked on the engine side
     assert(_offsetIsValid(offset));
     if (matrix4 != null) {
@@ -2144,7 +2144,7 @@ class Path extends NativeFieldWrapperClass2 {
     }
   }
   void _extendWithPath(Path path, double dx, double dy) native 'Path_extendWithPath';
-  void _extendWithPathAndMatrix(Path path, double dx, double dy, Float64List matrix) native 'Path_extendWithPathAndMatrix';
+  void _extendWithPathAndMatrix(Path path, double dx, double dy, Float32List matrix) native 'Path_extendWithPathAndMatrix';
 
   /// Closes the last sub-path, as if a straight line had been drawn
   /// from the current point to the first point of the sub-path.
@@ -2180,13 +2180,13 @@ class Path extends NativeFieldWrapperClass2 {
 
   /// Returns a copy of the path with all the segments of every
   /// sub-path transformed by the given matrix.
-  Path transform(Float64List matrix4) {
+  Path transform(Float32List matrix4) {
     assert(_matrix4IsValid(matrix4));
     final Path path = Path._();
     _transform(path, matrix4);
     return path;
   }
-  void _transform(Path outPath, Float64List matrix4) native 'Path_transform';
+  void _transform(Path outPath, Float32List matrix4) native 'Path_transform';
 
   /// Computes the bounding rectangle for this path.
   ///
@@ -2798,17 +2798,17 @@ class ImageFilter {
   ///
   /// For example, applying a positive scale matrix (see [Matrix4.diagonal3])
   /// when used with [BackdropFilter] would magnify the background image.
-  ImageFilter.matrix(Float64List matrix4,
+  ImageFilter.matrix(Float32List matrix4,
                      { FilterQuality filterQuality = FilterQuality.low })
-      : _data = Float64List.fromList(matrix4),
+      : _data = Float32List.fromList(matrix4),
         _filterQuality = filterQuality,
         _type = _kTypeMatrix {
     if (matrix4.length != 16)
       throw ArgumentError('"matrix4" must have 16 entries.');
   }
 
-  static Float64List _makeList(double a, double b) {
-    final Float64List list = Float64List(2);
+  static Float32List _makeList(double a, double b) {
+    final Float32List list = Float32List(2);
     if (a != null)
       list[0] = a;
     if (b != null)
@@ -2816,7 +2816,7 @@ class ImageFilter {
     return list;
   }
 
-  final Float64List _data;
+  final Float32List _data;
   final FilterQuality _filterQuality;
   final int _type;
   _ImageFilter _nativeFilter;
@@ -2894,7 +2894,7 @@ class _ImageFilter extends NativeFieldWrapperClass2 {
     _constructor();
     _initMatrix(creator._data, creator._filterQuality.index);
   }
-  void _initMatrix(Float64List matrix4, int filterQuality) native 'ImageFilter_initMatrix';
+  void _initMatrix(Float32List matrix4, int filterQuality) native 'ImageFilter_initMatrix';
 
   /// The original Dart object that created the native wrapper, which retains
   /// the values used for the filter.
@@ -3035,7 +3035,7 @@ class Gradient extends Shader {
     List<Color> colors, [
     List<double> colorStops,
     TileMode tileMode = TileMode.clamp,
-    Float64List matrix4,
+    Float32List matrix4,
   ]) : assert(_offsetIsValid(from)),
        assert(_offsetIsValid(to)),
        assert(colors != null),
@@ -3049,7 +3049,7 @@ class Gradient extends Shader {
     _constructor();
     _initLinear(endPointsBuffer, colorsBuffer, colorStopsBuffer, tileMode.index, matrix4);
   }
-  void _initLinear(Float32List endPoints, Int32List colors, Float32List colorStops, int tileMode, Float64List matrix4) native 'Gradient_initLinear';
+  void _initLinear(Float32List endPoints, Int32List colors, Float32List colorStops, int tileMode, Float32List matrix4) native 'Gradient_initLinear';
 
   /// Creates a radial gradient centered at `center` that ends at `radius`
   /// distance from the center.
@@ -3086,7 +3086,7 @@ class Gradient extends Shader {
     List<Color> colors, [
     List<double> colorStops,
     TileMode tileMode = TileMode.clamp,
-    Float64List matrix4,
+    Float32List matrix4,
     Offset focal,
     double focalRadius = 0.0
   ]) : assert(_offsetIsValid(center)),
@@ -3110,8 +3110,8 @@ class Gradient extends Shader {
       _initConical(focal.dx, focal.dy, focalRadius, center.dx, center.dy, radius, colorsBuffer, colorStopsBuffer, tileMode.index, matrix4);
     }
   }
-  void _initRadial(double centerX, double centerY, double radius, Int32List colors, Float32List colorStops, int tileMode, Float64List matrix4) native 'Gradient_initRadial';
-  void _initConical(double startX, double startY, double startRadius, double endX, double endY, double endRadius, Int32List colors, Float32List colorStops, int tileMode, Float64List matrix4) native 'Gradient_initTwoPointConical';
+  void _initRadial(double centerX, double centerY, double radius, Int32List colors, Float32List colorStops, int tileMode, Float32List matrix4) native 'Gradient_initRadial';
+  void _initConical(double startX, double startY, double startRadius, double endX, double endY, double endRadius, Int32List colors, Float32List colorStops, int tileMode, Float32List matrix4) native 'Gradient_initTwoPointConical';
 
   /// Creates a sweep gradient centered at `center` that starts at `startAngle`
   /// and ends at `endAngle`.
@@ -3146,7 +3146,7 @@ class Gradient extends Shader {
     TileMode tileMode = TileMode.clamp,
     double startAngle = 0.0,
     double endAngle = math.pi * 2,
-    Float64List matrix4,
+    Float32List matrix4,
   ]) : assert(_offsetIsValid(center)),
        assert(colors != null),
        assert(tileMode != null),
@@ -3161,7 +3161,7 @@ class Gradient extends Shader {
     _constructor();
     _initSweep(center.dx, center.dy, colorsBuffer, colorStopsBuffer, tileMode.index, startAngle, endAngle, matrix4);
   }
-  void _initSweep(double centerX, double centerY, Int32List colors, Float32List colorStops, int tileMode, double startAngle, double endAngle, Float64List matrix) native 'Gradient_initSweep';
+  void _initSweep(double centerX, double centerY, Int32List colors, Float32List colorStops, int tileMode, double startAngle, double endAngle, Float32List matrix) native 'Gradient_initSweep';
 
   static void _validateColorStops(List<Color> colors, List<double> colorStops) {
     if (colorStops == null) {
@@ -3182,7 +3182,7 @@ class ImageShader extends Shader {
   /// matrix to apply to the effect. All the arguments are required and must not
   /// be null.
   @pragma('vm:entry-point')
-  ImageShader(Image image, TileMode tmx, TileMode tmy, Float64List matrix4) :
+  ImageShader(Image image, TileMode tmx, TileMode tmy, Float32List matrix4) :
     assert(image != null), // image is checked on the engine side
     assert(tmx != null),
     assert(tmy != null),
@@ -3194,7 +3194,7 @@ class ImageShader extends Shader {
     _initWithImage(image, tmx.index, tmy.index, matrix4);
   }
   void _constructor() native 'ImageShader_constructor';
-  void _initWithImage(Image image, int tmx, int tmy, Float64List matrix4) native 'ImageShader_initWithImage';
+  void _initWithImage(Image image, int tmx, int tmy, Float32List matrix4) native 'ImageShader_initWithImage';
 }
 
 /// Defines how a list of points is interpreted when drawing a set of triangles.
@@ -3568,13 +3568,13 @@ class Canvas extends NativeFieldWrapperClass2 {
 
   /// Multiply the current transform by the specified 4⨉4 transformation matrix
   /// specified as a list of values in column-major order.
-  void transform(Float64List matrix4) {
+  void transform(Float32List matrix4) {
     assert(matrix4 != null);
     if (matrix4.length != 16)
       throw ArgumentError('"matrix4" must have 16 entries.');
     _transform(matrix4);
   }
-  void _transform(Float64List matrix4) native 'Canvas_transform';
+  void _transform(Float32List matrix4) native 'Canvas_transform';
 
   /// Reduces the clip region to the intersection of the current clip and the
   /// given rectangle.

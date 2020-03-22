@@ -687,7 +687,7 @@ class SemanticsUpdateBuilder {
     String increasedValue,
     String decreasedValue,
     TextDirection textDirection,
-    Float64List transform,
+    Float32List transform,
     Int32List childrenInTraversalOrder,
     Int32List childrenInHitTestOrder,
     Int32List additionalActions,

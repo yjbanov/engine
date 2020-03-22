@@ -271,7 +271,7 @@ class SkCanvas {
     skCanvas.callMethod('skew', <double>[sx, sy]);
   }
 
-  void transform(Float64List matrix4) {
+  void transform(Float32List matrix4) {
     skCanvas.callMethod('concat', <js.JsArray<double>>[makeSkMatrix(matrix4)]);
   }
 

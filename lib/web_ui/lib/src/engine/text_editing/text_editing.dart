@@ -1112,7 +1112,7 @@ class EditableTextGeometry {
     return EditableTextGeometry(
       width: encodedGeometry['width'],
       height: encodedGeometry['height'],
-      globalTransform: Float64List.fromList(transformList),
+      globalTransform: Float32List.fromList(transformList),
     );
   }
 
@@ -1127,7 +1127,7 @@ class EditableTextGeometry {
   ///
   /// For correct sizing this transform must be applied to the [width] and
   /// [height] fields.
-  final Float64List globalTransform;
+  final Float32List globalTransform;
 
   /// Applies this geometry to the DOM element.
   ///
@@ -1138,7 +1138,7 @@ class EditableTextGeometry {
   /// tree the semantics tree provides the placement parameters, in which
   /// case this method should not be used.
   void applyToDomElement(html.HtmlElement domElement) {
-    final String cssTransform = float64ListToCssTransform(globalTransform);
+    final String cssTransform = float32ListToCssTransform(globalTransform);
     domElement.style
       ..width = '${width}px'
       ..height = '${height}px'

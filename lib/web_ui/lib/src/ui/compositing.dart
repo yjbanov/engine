@@ -137,7 +137,7 @@ abstract class SceneBuilder {
   ///
   /// See [pop] for details about the operation stack.
   TransformEngineLayer pushTransform(
-    Float64List matrix4, {
+    Float32List matrix4, {
     TransformEngineLayer oldLayer,
   });
 

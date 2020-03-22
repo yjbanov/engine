@@ -43,7 +43,7 @@ void CanvasGradient::initLinear(const tonic::Float32List& end_points,
                                 const tonic::Int32List& colors,
                                 const tonic::Float32List& color_stops,
                                 SkTileMode tile_mode,
-                                const tonic::Float64List& matrix4) {
+                                const tonic::Float32List& matrix4) {
   FML_DCHECK(end_points.num_elements() == 4);
   FML_DCHECK(colors.num_elements() == color_stops.num_elements() ||
              color_stops.data() == nullptr);
@@ -71,7 +71,7 @@ void CanvasGradient::initRadial(double center_x,
                                 const tonic::Int32List& colors,
                                 const tonic::Float32List& color_stops,
                                 SkTileMode tile_mode,
-                                const tonic::Float64List& matrix4) {
+                                const tonic::Float32List& matrix4) {
   FML_DCHECK(colors.num_elements() == color_stops.num_elements() ||
              color_stops.data() == nullptr);
 
@@ -97,7 +97,7 @@ void CanvasGradient::initSweep(double center_x,
                                SkTileMode tile_mode,
                                double start_angle,
                                double end_angle,
-                               const tonic::Float64List& matrix4) {
+                               const tonic::Float32List& matrix4) {
   FML_DCHECK(colors.num_elements() == color_stops.num_elements() ||
              color_stops.data() == nullptr);
 
@@ -126,7 +126,7 @@ void CanvasGradient::initTwoPointConical(double start_x,
                                          const tonic::Int32List& colors,
                                          const tonic::Float32List& color_stops,
                                          SkTileMode tile_mode,
-                                         const tonic::Float64List& matrix4) {
+                                         const tonic::Float32List& matrix4) {
   FML_DCHECK(colors.num_elements() == color_stops.num_elements() ||
              color_stops.data() == nullptr);
 

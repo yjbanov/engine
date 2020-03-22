@@ -61,7 +61,7 @@ class SkPath implements ui.Path {
   }
 
   @override
-  void addPath(ui.Path path, ui.Offset offset, {Float64List matrix4}) {
+  void addPath(ui.Path path, ui.Offset offset, {Float32List matrix4}) {
     List<double> skMatrix;
     if (matrix4 == null) {
       skMatrix = makeSkMatrix(
@@ -172,7 +172,7 @@ class SkPath implements ui.Path {
   }
 
   @override
-  void extendWithPath(ui.Path path, ui.Offset offset, {Float64List matrix4}) {
+  void extendWithPath(ui.Path path, ui.Offset offset, {Float32List matrix4}) {
     List<double> skMatrix;
     if (matrix4 == null) {
       skMatrix = makeSkMatrix(
@@ -314,7 +314,7 @@ class SkPath implements ui.Path {
   }
 
   @override
-  ui.Path transform(Float64List matrix4) {
+  ui.Path transform(Float32List matrix4) {
     final js.JsObject newPath = _skPath.callMethod('copy');
     newPath.callMethod('transform', <js.JsArray>[makeSkMatrix(matrix4)]);
     return SkPath._fromSkPath(newPath);

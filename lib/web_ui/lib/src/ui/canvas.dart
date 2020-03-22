@@ -455,7 +455,7 @@ class Canvas {
 
   /// Multiply the current transform by the specified 4⨉4 transformation matrix
   /// specified as a list of values in column-major order.
-  void transform(Float64List matrix4) {
+  void transform(Float32List matrix4) {
     assert(matrix4 != null);
     if (matrix4.length != 16) {
       throw ArgumentError('"matrix4" must have 16 entries.');
@@ -463,7 +463,7 @@ class Canvas {
     _transform(matrix4);
   }
 
-  void _transform(Float64List matrix4) {
+  void _transform(Float32List matrix4) {
     _canvas.transform(matrix4);
   }
 

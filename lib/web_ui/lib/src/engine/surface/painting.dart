@@ -747,7 +747,7 @@ class SurfacePath implements ui.Path {
   /// after the matrix is translated by the given offset. The matrix is a 4x4
   /// matrix stored in column major order.
   @override
-  void addPath(ui.Path path, ui.Offset offset, {Float64List matrix4}) {
+  void addPath(ui.Path path, ui.Offset offset, {Float32List matrix4}) {
     assert(path != null); // path is checked on the engine side
     assert(offsetIsValid(offset));
     if (matrix4 != null) {
@@ -769,8 +769,8 @@ class SurfacePath implements ui.Path {
   }
 
   void _addPathWithMatrix(
-      SurfacePath path, double dx, double dy, Float64List matrix) {
-    final Matrix4 transform = Matrix4.fromFloat64List(matrix);
+      SurfacePath path, double dx, double dy, Float32List matrix) {
+    final Matrix4 transform = Matrix4.fromFloat32List(matrix);
     transform.translate(dx, dy);
     subpaths.addAll(path.transform(transform.storage).subpaths);
   }
@@ -782,7 +782,7 @@ class SurfacePath implements ui.Path {
   /// after the matrix is translated by the given `offset`.  The matrix is a 4x4
   /// matrix stored in column major order.
   @override
-  void extendWithPath(ui.Path path, ui.Offset offset, {Float64List matrix4}) {
+  void extendWithPath(ui.Path path, ui.Offset offset, {Float32List matrix4}) {
     assert(path != null); // path is checked on the engine side
     assert(offsetIsValid(offset));
     if (matrix4 != null) {
@@ -806,7 +806,7 @@ class SurfacePath implements ui.Path {
   }
 
   void _extendWithPathAndMatrix(
-      SurfacePath path, double dx, double dy, Float64List matrix) {
+      SurfacePath path, double dx, double dy, Float32List matrix) {
     throw UnimplementedError('Cannot extend path with transform matrix');
   }
 
@@ -962,7 +962,7 @@ class SurfacePath implements ui.Path {
   /// Returns a copy of the path with all the segments of every
   /// sub path transformed by the given matrix.
   @override
-  SurfacePath transform(Float64List matrix4) {
+  SurfacePath transform(Float32List matrix4) {
     assert(matrix4IsValid(matrix4));
     final SurfacePath transformedPath = SurfacePath();
     for (final Subpath subPath in subpaths) {

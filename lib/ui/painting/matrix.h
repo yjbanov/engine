@@ -10,8 +10,8 @@
 
 namespace flutter {
 
-SkMatrix ToSkMatrix(const tonic::Float64List& matrix4);
-tonic::Float64List ToMatrix4(const SkMatrix& sk_matrix);
+SkMatrix ToSkMatrix(const tonic::Float32List& matrix4);
+tonic::Float32List ToMatrix4(const SkMatrix& sk_matrix);
 
 }  // namespace flutter
 

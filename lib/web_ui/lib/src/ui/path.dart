@@ -209,7 +209,7 @@ abstract class Path {
   /// If `matrix4` is specified, the path will be transformed by this matrix
   /// after the matrix is translated by the given offset. The matrix is a 4x4
   /// matrix stored in column major order.
-  void addPath(Path path, Offset offset, {Float64List matrix4});
+  void addPath(Path path, Offset offset, {Float32List matrix4});
 
   /// Adds the given path to this path by extending the current segment of this
   /// path with the first segment of the given path.
@@ -217,7 +217,7 @@ abstract class Path {
   /// If `matrix4` is specified, the path will be transformed by this matrix
   /// after the matrix is translated by the given `offset`.  The matrix is a 4x4
   /// matrix stored in column major order.
-  void extendWithPath(Path path, Offset offset, {Float64List matrix4});
+  void extendWithPath(Path path, Offset offset, {Float32List matrix4});
 
   /// Closes the last subpath, as if a straight line had been drawn
   /// from the current point to the first point of the subpath.
@@ -247,7 +247,7 @@ abstract class Path {
 
   /// Returns a copy of the path with all the segments of every
   /// sub path transformed by the given matrix.
-  Path transform(Float64List matrix4);
+  Path transform(Float32List matrix4);
 
   /// Computes the bounding rectangle for this path.
   ///

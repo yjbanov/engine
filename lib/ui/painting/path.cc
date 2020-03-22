@@ -214,7 +214,7 @@ void CanvasPath::addPath(CanvasPath* path, double dx, double dy) {
 void CanvasPath::addPathWithMatrix(CanvasPath* path,
                                    double dx,
                                    double dy,
-                                   tonic::Float64List& matrix4) {
+                                   tonic::Float32List& matrix4) {
   if (!path) {
     Dart_ThrowException(
         ToDart("Path.addPathWithMatrix called with non-genuine Path."));
@@ -237,7 +237,7 @@ void CanvasPath::extendWithPath(CanvasPath* path, double dx, double dy) {
 void CanvasPath::extendWithPathAndMatrix(CanvasPath* path,
                                          double dx,
                                          double dy,
-                                         tonic::Float64List& matrix4) {
+                                         tonic::Float32List& matrix4) {
   if (!path) {
     Dart_ThrowException(
         ToDart("Path.addPathWithMatrix called with non-genuine Path."));
@@ -268,7 +268,7 @@ void CanvasPath::shift(Dart_Handle path_handle, double dx, double dy) {
 }
 
 void CanvasPath::transform(Dart_Handle path_handle,
-                           tonic::Float64List& matrix4) {
+                           tonic::Float32List& matrix4) {
   fml::RefPtr<CanvasPath> path = CanvasPath::Create(path_handle);
   path_.transform(ToSkMatrix(matrix4), &path->path_);
   matrix4.Release();

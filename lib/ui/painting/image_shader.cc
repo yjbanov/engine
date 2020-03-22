@@ -37,7 +37,7 @@ fml::RefPtr<ImageShader> ImageShader::Create() {
 void ImageShader::initWithImage(CanvasImage* image,
                                 SkTileMode tmx,
                                 SkTileMode tmy,
-                                const tonic::Float64List& matrix4) {
+                                const tonic::Float32List& matrix4) {
   if (!image) {
     Dart_ThrowException(
         ToDart("ImageShader constructor called with non-genuine Image."));

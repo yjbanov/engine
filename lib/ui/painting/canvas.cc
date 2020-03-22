@@ -150,7 +150,7 @@ void Canvas::skew(double sx, double sy) {
   canvas_->skew(sx, sy);
 }
 
-void Canvas::transform(const tonic::Float64List& matrix4) {
+void Canvas::transform(const tonic::Float32List& matrix4) {
   if (!canvas_)
     return;
   canvas_->concat(ToSkMatrix(matrix4));

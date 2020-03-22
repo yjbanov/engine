@@ -31,7 +31,7 @@ class ImageShader : public Shader {
   void initWithImage(CanvasImage* image,
                      SkTileMode tmx,
                      SkTileMode tmy,
-                     const tonic::Float64List& matrix4);
+                     const tonic::Float32List& matrix4);
 
   static void RegisterNatives(tonic::DartLibraryNatives* natives);
 

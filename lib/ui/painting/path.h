@@ -93,17 +93,17 @@ class CanvasPath : public RefCountedDartWrappable<CanvasPath> {
   void addPathWithMatrix(CanvasPath* path,
                          double dx,
                          double dy,
-                         tonic::Float64List& matrix4);
+                         tonic::Float32List& matrix4);
   void extendWithPath(CanvasPath* path, double dx, double dy);
   void extendWithPathAndMatrix(CanvasPath* path,
                                double dx,
                                double dy,
-                               tonic::Float64List& matrix4);
+                               tonic::Float32List& matrix4);
   void close();
   void reset();
   bool contains(double x, double y);
   void shift(Dart_Handle path_handle, double dx, double dy);
-  void transform(Dart_Handle path_handle, tonic::Float64List& matrix4);
+  void transform(Dart_Handle path_handle, tonic::Float32List& matrix4);
   tonic::Float32List getBounds();
   bool op(CanvasPath* path1, CanvasPath* path2, int operation);
   void clone(Dart_Handle path_handle);

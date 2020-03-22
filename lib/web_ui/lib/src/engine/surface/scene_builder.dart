@@ -88,7 +88,7 @@ class SurfaceSceneBuilder implements ui.SceneBuilder {
   /// See [pop] for details about the operation stack.
   @override
   ui.TransformEngineLayer pushTransform(
-    Float64List matrix4, {
+    Float32List matrix4, {
     ui.TransformEngineLayer oldLayer,
   }) {
     if (matrix4 == null) {

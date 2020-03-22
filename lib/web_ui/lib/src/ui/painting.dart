@@ -14,7 +14,7 @@ bool _offsetIsValid(Offset offset) {
 }
 
 // ignore: unused_element, Used in Shader assert.
-bool _matrix4IsValid(Float64List matrix4) {
+bool _matrix4IsValid(Float32List matrix4) {
   assert(matrix4 != null, 'Matrix4 argument was null.');
   assert(matrix4.length == 16, 'Matrix4 must have 16 entries.');
   return true;
@@ -1094,7 +1094,7 @@ abstract class Gradient extends Shader {
     List<Color> colors, [
     List<double> colorStops,
     TileMode tileMode = TileMode.clamp,
-    Float64List
+    Float32List
         matrix4, // TODO(flutter_web): see https://github.com/flutter/flutter/issues/32819
   ]) =>
       engine.GradientLinear(from, to, colors, colorStops, tileMode);
@@ -1131,7 +1131,7 @@ abstract class Gradient extends Shader {
   factory Gradient.radial(Offset center, double radius, List<Color> colors,
       [List<double> colorStops,
       TileMode tileMode = TileMode.clamp,
-      Float64List matrix4,
+      Float32List matrix4,
       Offset focal,
       double focalRadius = 0.0]) {
     focalRadius ??= 0.0;
@@ -1182,7 +1182,7 @@ abstract class Gradient extends Shader {
     TileMode tileMode = TileMode.clamp,
     double startAngle = 0.0,
     double endAngle = math.pi * 2,
-    Float64List matrix4,
+    Float32List matrix4,
   ]) =>
       engine.GradientSweep(
           center, colors, colorStops, tileMode, startAngle, endAngle, matrix4);
@@ -1442,7 +1442,7 @@ class ImageFilter {
     return engine.EngineImageFilter.blur(sigmaX: sigmaX, sigmaY: sigmaY);
   }
 
-  ImageFilter.matrix(Float64List matrix4,
+  ImageFilter.matrix(Float32List matrix4,
       {FilterQuality filterQuality = FilterQuality.low}) {
     // TODO(flutter_web): add implementation.
     throw UnimplementedError(

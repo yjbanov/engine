@@ -177,7 +177,7 @@ class JSONMethodCodec implements MethodCodec {
 ///  * [bool]s
 ///  * [num]s
 ///  * [String]s
-///  * [Uint8List]s, [Int32List]s, [Int64List]s, [Float64List]s
+///  * [Uint8List]s, [Int32List]s, [Int64List]s, [Float64List]s, [Float32List]s
 ///  * [List]s of supported values
 ///  * [Map]s from supported values to supported values
 ///
@@ -196,6 +196,7 @@ class JSONMethodCodec implements MethodCodec {
 ///  * [Int32List]\: `int[]`
 ///  * [Int64List]\: `long[]`
 ///  * [Float64List]\: `double[]`
+///  * [Float32List]\: `float[]`
 ///  * [List]\: `java.util.ArrayList`
 ///  * [Map]\: `java.util.HashMap`
 ///
@@ -207,7 +208,7 @@ class JSONMethodCodec implements MethodCodec {
 ///    32-bit two's complement; `NSNumber numberWithLong:` otherwise
 ///  * [double]\: `NSNumber numberWithDouble:`
 ///  * [String]\: `NSString`
-///  * [Uint8List], [Int32List], [Int64List], [Float64List]\:
+///  * [Uint8List], [Int32List], [Int64List], [Float64List], [Float32List]\:
 ///    `FlutterStandardTypedData`
 ///  * [List]\: `NSArray`
 ///  * [Map]\: `NSDictionary`
@@ -266,6 +267,7 @@ class StandardMessageCodec implements MessageCodec<dynamic> {
   static const int _valueFloat64List = 11;
   static const int _valueList = 12;
   static const int _valueMap = 13;
+  static const int _valueFloat32List = 14;
 
   /// Creates a [MessageCodec] using the Flutter standard binary encoding.
   const StandardMessageCodec();
@@ -343,6 +345,10 @@ class StandardMessageCodec implements MessageCodec<dynamic> {
       buffer.putUint8(_valueFloat64List);
       writeSize(buffer, value.length);
       buffer.putFloat64List(value);
+    } else if (value is Float32List) {
+      buffer.putUint8(_valueFloat32List);
+      writeSize(buffer, value.length);
+      buffer.putFloat32List(value);
     } else if (value is List) {
       buffer.putUint8(_valueList);
       writeSize(buffer, value.length);
@@ -425,6 +431,10 @@ class StandardMessageCodec implements MessageCodec<dynamic> {
       case _valueFloat64List:
         final int length = readSize(buffer);
         result = buffer.getFloat64List(length);
+        break;
+      case _valueFloat32List:
+        final int length = readSize(buffer);
+        result = buffer.getFloat32List(length);
         break;
       case _valueList:
         final int length = readSize(buffer);

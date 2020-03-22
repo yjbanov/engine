@@ -56,7 +56,7 @@ void ImageFilter::initBlur(double sigma_x, double sigma_y) {
                                     SkBlurImageFilter::kClamp_TileMode);
 }
 
-void ImageFilter::initMatrix(const tonic::Float64List& matrix4,
+void ImageFilter::initMatrix(const tonic::Float32List& matrix4,
                              int filterQuality) {
   filter_ = SkImageFilter::MakeMatrixFilter(
       ToSkMatrix(matrix4), static_cast<SkFilterQuality>(filterQuality),

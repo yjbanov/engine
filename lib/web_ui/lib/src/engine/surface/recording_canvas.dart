@@ -153,7 +153,7 @@ class RecordingCanvas {
     _commands.add(PaintRotate(radians));
   }
 
-  void transform(Float64List matrix4) {
+  void transform(Float32List matrix4) {
     _paintBounds.transform(matrix4);
     _commands.add(PaintTransform(matrix4));
   }
@@ -582,7 +582,7 @@ class PaintRotate extends PaintCommand {
 }
 
 class PaintTransform extends PaintCommand {
-  final Float64List matrix4;
+  final Float32List matrix4;
 
   PaintTransform(this.matrix4);
 
@@ -594,7 +594,7 @@ class PaintTransform extends PaintCommand {
   @override
   String toString() {
     if (assertionsEnabled) {
-      return 'transform(Matrix4.fromFloat64List(Float64List.fromList(<double>[${matrix4.join(', ')}])))';
+      return 'transform(Matrix4.fromFloat32List(Float32List.fromList(<double>[${matrix4.join(', ')}])))';
     } else {
       return super.toString();
     }
@@ -1264,10 +1264,10 @@ abstract class PathCommand {
   List<dynamic> serializeToCssPaint();
 
   /// Transform the command and add to targetPath.
-  void transform(Float64List matrix4, ui.Path targetPath);
+  void transform(Float32List matrix4, ui.Path targetPath);
 
   /// Helper method for implementing transforms.
-  static ui.Offset _transformOffset(double x, double y, Float64List matrix4) =>
+  static ui.Offset _transformOffset(double x, double y, Float32List matrix4) =>
       ui.Offset((matrix4[0] * x) + (matrix4[4] * y) + matrix4[12],
           (matrix4[1] * x) + (matrix4[5] * y) + matrix4[13]);
 }
@@ -1289,7 +1289,7 @@ class MoveTo extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     final ui.Offset offset = PathCommand._transformOffset(x, y, matrix4);
     targetPath.moveTo(offset.dx, offset.dy);
   }
@@ -1321,7 +1321,7 @@ class LineTo extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     final ui.Offset offset = PathCommand._transformOffset(x, y, matrix4);
     targetPath.lineTo(offset.dx, offset.dy);
   }
@@ -1372,7 +1372,7 @@ class Ellipse extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     final ui.Path bezierPath = ui.Path();
     _drawArcWithBezier(
         x,
@@ -1395,7 +1395,7 @@ class Ellipse extends PathCommand {
       double rotation,
       double startAngle,
       double sweep,
-      Float64List matrix4,
+      Float32List matrix4,
       ui.Path targetPath) {
     double ratio = sweep.abs() / (math.pi / 2.0);
     if ((1.0 - ratio).abs() < 0.0000001) {
@@ -1421,7 +1421,7 @@ class Ellipse extends PathCommand {
       double startAngle,
       double sweep,
       bool startPath,
-      Float64List matrix4) {
+      Float32List matrix4) {
     final double s = 4 / 3 * math.tan(sweep / 4);
 
     // Rotate unit vector to startAngle and endAngle to use for computing start
@@ -1505,7 +1505,7 @@ class QuadraticCurveTo extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     final double m0 = matrix4[0];
     final double m1 = matrix4[1];
     final double m4 = matrix4[4];
@@ -1553,7 +1553,7 @@ class BezierCurveTo extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     final double s0 = matrix4[0];
     final double s1 = matrix4[1];
     final double s4 = matrix4[4];
@@ -1595,7 +1595,7 @@ class RectCommand extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     final double s0 = matrix4[0];
     final double s1 = matrix4[1];
     final double s4 = matrix4[4];
@@ -1659,7 +1659,7 @@ class RRectCommand extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     final ui.Path roundRectPath = ui.Path();
     _RRectToPathRenderer(roundRectPath).render(rrect);
     targetPath.addPath(roundRectPath, ui.Offset.zero, matrix4: matrix4);
@@ -1689,7 +1689,7 @@ class CloseCommand extends PathCommand {
   }
 
   @override
-  void transform(Float64List matrix4, ui.Path targetPath) {
+  void transform(Float32List matrix4, ui.Path targetPath) {
     targetPath.close();
   }
 
@@ -1747,8 +1747,8 @@ class _PaintBounds {
     _currentMatrix.rotateZ(radians);
   }
 
-  void transform(Float64List matrix4) {
-    final Matrix4 m4 = Matrix4.fromFloat64List(matrix4);
+  void transform(Float32List matrix4) {
+    final Matrix4 m4 = Matrix4.fromFloat32List(matrix4);
     _currentMatrix.multiply(m4);
     _currentMatrixIsIdentity = _currentMatrix.isIdentity();
   }
@@ -1759,7 +1759,7 @@ class _PaintBounds {
     // DO NOT USE Matrix4.skew(sx, sy)! It treats sx and sy values as radians,
     // but in our case they are transform matrix values.
     final Matrix4 skewMatrix = Matrix4.identity();
-    final Float64List storage = skewMatrix.storage;
+    final Float32List storage = skewMatrix.storage;
     storage[1] = sy;
     storage[4] = sx;
     _currentMatrix.multiply(skewMatrix);

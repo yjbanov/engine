@@ -11,11 +11,11 @@ class PersistedTransform extends PersistedContainerSurface
   PersistedTransform(PersistedTransform oldLayer, this.matrix4)
       : super(oldLayer);
 
-  final Float64List matrix4;
+  final Float32List matrix4;
 
   @override
   void recomputeTransformAndClip() {
-    _transform = parent._transform.multiplied(Matrix4.fromFloat64List(matrix4));
+    _transform = parent._transform.multiplied(Matrix4.fromFloat32List(matrix4));
     _localTransformInverse = null;
     _projectedClip = null;
   }
@@ -23,7 +23,7 @@ class PersistedTransform extends PersistedContainerSurface
   @override
   Matrix4 get localTransformInverse {
     _localTransformInverse ??=
-        Matrix4.tryInvert(Matrix4.fromFloat64List(matrix4));
+        Matrix4.tryInvert(Matrix4.fromFloat32List(matrix4));
     return _localTransformInverse;
   }
 
@@ -35,7 +35,7 @@ class PersistedTransform extends PersistedContainerSurface
 
   @override
   void apply() {
-    rootElement.style.transform = float64ListToCssTransform(matrix4);
+    rootElement.style.transform = float32ListToCssTransform(matrix4);
   }
 
   @override

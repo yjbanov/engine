@@ -17,7 +17,7 @@ static const int kSkMatrixIndexToMatrix4Index[] = {
     // clang-format on
 };
 
-SkMatrix ToSkMatrix(const tonic::Float64List& matrix4) {
+SkMatrix ToSkMatrix(const tonic::Float32List& matrix4) {
   FML_DCHECK(matrix4.data());
   SkMatrix sk_matrix;
   for (int i = 0; i < 9; ++i) {
@@ -30,8 +30,8 @@ SkMatrix ToSkMatrix(const tonic::Float64List& matrix4) {
   return sk_matrix;
 }
 
-tonic::Float64List ToMatrix4(const SkMatrix& sk_matrix) {
-  tonic::Float64List matrix4(Dart_NewTypedData(Dart_TypedData_kFloat64, 16));
+tonic::Float32List ToMatrix4(const SkMatrix& sk_matrix) {
+  tonic::Float32List matrix4(Dart_NewTypedData(Dart_TypedData_kFloat64, 16));
   for (int i = 0; i < 9; ++i)
     matrix4[kSkMatrixIndexToMatrix4Index[i]] = sk_matrix[i];
   matrix4[10] = 1.0;  // Identity along the z axis.

@@ -89,7 +89,7 @@ SceneBuilder::SceneBuilder() {
 SceneBuilder::~SceneBuilder() = default;
 
 void SceneBuilder::pushTransform(Dart_Handle layer_handle,
-                                 tonic::Float64List& matrix4) {
+                                 tonic::Float32List& matrix4) {
   SkMatrix sk_matrix = ToSkMatrix(matrix4);
   auto layer = std::make_shared<flutter::TransformLayer>(sk_matrix);
   PushLayer(layer);
