@@ -34,8 +34,8 @@ void invokePlatformTaskRunner() {
 }
 
 
-Float64List kTestTransform = () {
-  final Float64List values = Float64List(16);
+Float32List kTestTransform = () {
+  final Float32List values = Float32List(16);
   values[0] = 1.0;  // scaleX
   values[4] = 2.0;  // skewX
   values[12] = 3.0; // transX
@@ -483,7 +483,7 @@ void verify_b141980393() {
 void can_display_platform_view_with_pixel_ratio() {
   window.onBeginFrame = (Duration duration) {
     SceneBuilder builder = SceneBuilder();
-    builder.pushTransform(Float64List.fromList([
+    builder.pushTransform(Float32List.fromList([
       2.0, 0.0, 0.0, 0.0,
       0.0, 2.0, 0.0, 0.0,
       0.0, 0.0, 1.0, 0.0,
