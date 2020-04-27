@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "flutter/shell/platform/common/cpp/client_wrapper/include/flutter/json_method_codec.h"
+#include "flutter/shell/platform/common/cpp/json_method_codec.h"
 
 static constexpr char kSetEditingStateMethod[] = "TextInput.setEditingState";
 static constexpr char kClearClientMethod[] = "TextInput.clearClient";
@@ -34,16 +34,14 @@ static constexpr char kBadArgumentError[] = "Bad Arguments";
 static constexpr char kInternalConsistencyError[] =
     "Internal Consistency Error";
 
-static constexpr uint32_t kInputModelLimit = 256;
-
 namespace flutter {
 
-void TextInputPlugin::CharHook(Win32FlutterWindow* window,
-                               char32_t code_point) {
+void TextInputPlugin::TextHook(Win32FlutterWindow* window,
+                               const std::u16string& text) {
   if (active_model_ == nullptr) {
     return;
   }
-  active_model_->AddCharacter(code_point);
+  active_model_->AddText(text);
   SendStateUpdate(*active_model_);
 }
 
@@ -51,7 +49,7 @@ void TextInputPlugin::KeyboardHook(Win32FlutterWindow* window,
                                    int key,
                                    int scancode,
                                    int action,
-                                   int mods) {
+                                   char32_t character) {
   if (active_model_ == nullptr) {
     return;
   }
@@ -86,7 +84,7 @@ void TextInputPlugin::KeyboardHook(Win32FlutterWindow* window,
         }
         break;
       case VK_RETURN:
-        EnterPressed(active_model_);
+        EnterPressed(active_model_.get());
         break;
       default:
         break;
@@ -140,19 +138,8 @@ void TextInputPlugin::HandleMethodCall(
         return;
       }
       int client_id = client_id_json.GetInt();
-      if (input_models_.find(client_id) == input_models_.end()) {
-        // Skips out on adding a new input model once over the limit.
-        if (input_models_.size() > kInputModelLimit) {
-          result->Error(
-              kInternalConsistencyError,
-              "Input models over limit. Aborting creation of new text model.");
-          return;
-        }
-        input_models_.insert(std::make_pair(
-            client_id,
-            std::make_unique<TextInputModel>(client_id, client_config)));
-      }
-      active_model_ = input_models_[client_id].get();
+      active_model_ =
+          std::make_unique<TextInputModel>(client_id, client_config);
     } else if (method.compare(kSetEditingStateMethod) == 0) {
       if (active_model_ == nullptr) {
         result->Error(
@@ -196,7 +183,7 @@ void TextInputPlugin::SendStateUpdate(const TextInputModel& model) {
 
 void TextInputPlugin::EnterPressed(TextInputModel* model) {
   if (model->input_type() == kMultilineInputType) {
-    model->AddCharacter('\n');
+    model->AddText(std::u16string({u'\n'}));
     SendStateUpdate(*model);
   }
   auto args = std::make_unique<rapidjson::Document>(rapidjson::kArrayType);
