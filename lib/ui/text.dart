@@ -1926,10 +1926,29 @@ class Paragraph extends NativeFieldWrapperClass2 {
   void layout(ParagraphConstraints constraints) => _layout(constraints.width);
   void _layout(double width) native 'Paragraph_layout';
 
+  static void _decodeDummyTextBoxes(int length) {
+    _decodeDummyTextBoxesSize += length;
+    final int start = developer.Timeline.now;
+    final List<TextBox> data = <TextBox>[];
+    for (int i = 0; i < length; ++i) {
+      data.add(const TextBox.fromLTRBD(0, 0, 0, 0, TextDirection.ltr));
+    }
+    final int listPopulated = developer.Timeline.now;
+    _decodeDummyTextBoxesCount++;
+    final int time = listPopulated - start;
+    _decodeDummyTextBoxesMicros += time;
+    if (time > _decodeDummyTextBoxesMaxMicros) {
+      _decodeDummyTextBoxesMaxMicros = time;
+    }
+  }
+
   List<TextBox> _decodeTextBoxes(Float32List encoded) {
     final int count = encoded.length ~/ 5;
+    _decodeDummyTextBoxes(count);
+    final int start = developer.Timeline.now;
     final List<TextBox> boxes = <TextBox>[];
     int position = 0;
+    _decodeTextBoxesSize += count;
     for (int index = 0; index < count; index += 1) {
       boxes.add(TextBox.fromLTRBD(
         encoded[position++],
@@ -1938,6 +1957,16 @@ class Paragraph extends NativeFieldWrapperClass2 {
         encoded[position++],
         TextDirection.values[encoded[position++].toInt()],
       ));
+    }
+    final int listPopulated = developer.Timeline.now;
+    _decodeTextBoxesCount++;
+    final int time = listPopulated - start;
+    _decodeTextBoxesMicros += time;
+    if (time > _decodeTextBoxesMaxMicros) {
+      _decodeTextBoxesMaxMicros = time;
+    }
+    if (count > _decodeTextBoxesMaxLength) {
+      _decodeTextBoxesMaxLength = count;
     }
     return boxes;
   }

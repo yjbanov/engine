@@ -68,12 +68,85 @@ String? _localeClosure() {
 // ignore: unused_element
 _LocaleClosure? _getLocaleClosure() => _localeClosure;
 
+int _frameCount = 0;
+int _updateLocalesCount = 0;
+int _updateLocalesSize = 0;
+int _updateLocalesMicros = 0;
+
+int _updatePointerDataPacketCount = 0;
+int _updatePointerDataPacketSize = 0;
+int _updatePointerDataPacketMicros = 0;
+int _updatePointerDataPacketMaxMicros = 0;
+int _updatePointerDataPacketMaxLength = 0;
+
+int _updateDummyPointerDataPacketCount = 0;
+int _updateDummyPointerDataPacketSize = 0;
+int _updateDummyPointerDataPacketMicros = 0;
+int _updateDummyPointerDataPacketMaxMicros = 0;
+
+int _decodeTextBoxesCount = 0;
+int _decodeTextBoxesSize = 0;
+int _decodeTextBoxesMicros = 0;
+int _decodeTextBoxesMaxMicros = 0;
+int _decodeTextBoxesMaxLength = 0;
+
+int _decodeDummyTextBoxesCount = 0;
+int _decodeDummyTextBoxesSize = 0;
+int _decodeDummyTextBoxesMicros = 0;
+int _decodeDummyTextBoxesMaxMicros = 0;
+
+Timer? _benchTimer;
+
+void _benchNextFrame() {
+  _frameCount += 1;
+
+  _benchTimer ??= Timer(const Duration(seconds: 1), () {
+    print('''
+--------------------------- $_frameCount -----------------------------------
+Locales
+Count     : $_updateLocalesCount
+Size      : $_updateLocalesSize
+Micros    : $_updateLocalesMicros
+
+Pointers
+Count     : $_updatePointerDataPacketCount
+Size      : $_updatePointerDataPacketSize
+Micros    : $_updatePointerDataPacketMicros
+MaxMicros : $_updatePointerDataPacketMaxMicros
+MaxLength : $_updatePointerDataPacketMaxLength
+
+Dummy pointers
+Count     : $_updateDummyPointerDataPacketCount
+Size      : $_updateDummyPointerDataPacketSize
+Micros    : $_updateDummyPointerDataPacketMicros
+MaxMicros : $_updateDummyPointerDataPacketMaxMicros
+
+Text boxes
+Count     : $_decodeTextBoxesCount
+Size      : $_decodeTextBoxesSize
+Micros    : $_decodeTextBoxesMicros
+MaxMicros : $_decodeTextBoxesMaxMicros
+MaxLength : $_decodeTextBoxesMaxLength
+
+Dummy text boxes
+Count     : $_decodeDummyTextBoxesCount
+Size      : $_decodeDummyTextBoxesSize
+Micros    : $_decodeDummyTextBoxesMicros
+MaxMicros : $_decodeDummyTextBoxesMaxMicros
+----------------------------------------------------------------------------
+''');
+    _benchTimer = null;
+  });
+}
+
 @pragma('vm:entry-point')
 // ignore: unused_element
 void _updateLocales(List<String> locales) {
   const int stringsPerLocale = 4;
   final int numLocales = locales.length ~/ stringsPerLocale;
+  final int start = developer.Timeline.now;
   final List<Locale> newLocales = <Locale>[];
+  _updateLocalesSize += numLocales;
   for (int localeIndex = 0; localeIndex < numLocales; localeIndex++) {
     final String countryCode = locales[localeIndex * stringsPerLocale + 1];
     final String scriptCode = locales[localeIndex * stringsPerLocale + 2];
@@ -84,8 +157,11 @@ void _updateLocales(List<String> locales) {
       scriptCode: scriptCode.isEmpty ? null : scriptCode,
     ));
   }
+  final int listPopulated = developer.Timeline.now;
   window._locales = newLocales;
   _invoke(window.onLocaleChanged, window._onLocaleChangedZone);
+  _updateLocalesCount++;
+  _updateLocalesMicros += listPopulated - start;
 }
 
 @pragma('vm:entry-point')
@@ -207,6 +283,7 @@ void _dispatchSemanticsAction(int id, int action, ByteData? args) {
 @pragma('vm:entry-point')
 // ignore: unused_element
 void _beginFrame(int microseconds) {
+  _benchNextFrame();
   _invoke1<Duration>(window.onBeginFrame, window._onBeginFrameZone, Duration(microseconds: microseconds));
 }
 
@@ -307,15 +384,66 @@ void _invoke3<A1, A2, A3>(void callback(A1 a1, A2 a2, A3 a3)?, Zone zone, A1 arg
 //  * AndroidTouchProcessor.java
 const int _kPointerDataFieldCount = 28;
 
+final PointerData _dummyPointerData = PointerData(
+  timeStamp: Duration.zero,
+  change: PointerChange.values[0],
+  kind: PointerDeviceKind.values[0],
+  signalKind: PointerSignalKind.values[0],
+  device: 0,
+  pointerIdentifier: 0,
+  physicalX: 0,
+  physicalY: 0,
+  physicalDeltaX: 0,
+  physicalDeltaY: 0,
+  buttons: 0,
+  obscured: false,
+  synthesized: false,
+  pressure: 0,
+  pressureMin: 0,
+  pressureMax: 0,
+  distance: 0,
+  distanceMax: 0,
+  size: 0,
+  radiusMajor: 0,
+  radiusMinor: 0,
+  radiusMin: 0,
+  radiusMax: 0,
+  orientation: 0,
+  tilt: 0,
+  platformData: 0,
+  scrollDeltaX: 0,
+  scrollDeltaY: 0,
+);
+
+void _unpackDummyPointerData(int length) {
+  _updateDummyPointerDataPacketSize += length;
+  final int start = developer.Timeline.now;
+  final List<PointerData> data = <PointerData>[];
+  for (int i = 0; i < length; ++i) {
+    data.add(_dummyPointerData);
+  }
+  final int listPopulated = developer.Timeline.now;
+  _updateDummyPointerDataPacketCount++;
+  final int time = listPopulated - start;
+  _updateDummyPointerDataPacketMicros += time;
+  if (time > _updateDummyPointerDataPacketMaxMicros) {
+    _updateDummyPointerDataPacketMaxMicros = time;
+  }
+}
+
 PointerDataPacket _unpackPointerDataPacket(ByteData packet) {
   const int kStride = Int64List.bytesPerElement;
   const int kBytesPerPointerData = _kPointerDataFieldCount * kStride;
   final int length = packet.lengthInBytes ~/ kBytesPerPointerData;
   assert(length * kBytesPerPointerData == packet.lengthInBytes);
-  final List<PointerData> data = <PointerData>[];
+  _unpackDummyPointerData(length);
+  final int start = developer.Timeline.now;
+  //final List<PointerData> data = <PointerData>[];
+  final List<PointerData> data = List.filled(length, _dummyPointerData, growable: false);
+  _updatePointerDataPacketSize += length;
   for (int i = 0; i < length; ++i) {
     int offset = i * _kPointerDataFieldCount;
-    data.add(PointerData(
+    data[i] = (PointerData(
       timeStamp: Duration(microseconds: packet.getInt64(kStride * offset++, _kFakeHostEndian)),
       change: PointerChange.values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
       kind: PointerDeviceKind.values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
@@ -346,6 +474,16 @@ PointerDataPacket _unpackPointerDataPacket(ByteData packet) {
       scrollDeltaY: packet.getFloat64(kStride * offset++, _kFakeHostEndian)
     ));
     assert(offset == (i + 1) * _kPointerDataFieldCount);
+  }
+  final int listPopulated = developer.Timeline.now;
+  _updatePointerDataPacketCount++;
+  final int time = listPopulated - start;
+  _updatePointerDataPacketMicros += time;
+  if (time > _updatePointerDataPacketMaxMicros) {
+    _updatePointerDataPacketMaxMicros = time;
+  }
+  if (length > _updatePointerDataPacketMaxLength) {
+    _updatePointerDataPacketMaxLength = length;
   }
   return PointerDataPacket(data: data);
 }
