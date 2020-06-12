@@ -78,6 +78,7 @@ int _updatePointerDataPacketSize = 0;
 int _updatePointerDataPacketMicros = 0;
 int _updatePointerDataPacketMaxMicros = 0;
 int _updatePointerDataPacketMaxLength = 0;
+int _updatePointerDataPacketProcessedMicros = 0;
 
 int _updateDummyPointerDataPacketCount = 0;
 int _updateDummyPointerDataPacketSize = 0;
@@ -113,6 +114,7 @@ Count     : $_updatePointerDataPacketCount
 Size      : $_updatePointerDataPacketSize
 Micros    : $_updatePointerDataPacketMicros
 MaxMicros : $_updatePointerDataPacketMaxMicros
+PrcMicros : $_updatePointerDataPacketProcessedMicros
 MaxLength : $_updatePointerDataPacketMaxLength
 
 Dummy pointers
@@ -264,8 +266,25 @@ void _dispatchPlatformMessage(String name, ByteData? data, int responseId) {
 @pragma('vm:entry-point')
 // ignore: unused_element
 void _dispatchPointerDataPacket(ByteData packet) {
-  if (window.onPointerDataPacket != null)
-    _invoke1<PointerDataPacket>(window.onPointerDataPacket, window._onPointerDataPacketZone, _unpackPointerDataPacket(packet));
+  if (window.onPointerDataPacket != null) {
+    final int start = developer.Timeline.now;
+    final PointerDataPacket dataPacket = _unpackPointerDataPacket(packet);
+    final int length = dataPacket.data.length;
+    final int listPopulated = developer.Timeline.now;
+    _updatePointerDataPacketCount++;
+    final int time = listPopulated - start;
+    _updatePointerDataPacketMicros += time;
+    if (time > _updatePointerDataPacketMaxMicros) {
+      _updatePointerDataPacketMaxMicros = time;
+    }
+    if (length > _updatePointerDataPacketMaxLength) {
+      _updatePointerDataPacketMaxLength = length;
+    }
+    _invoke1<PointerDataPacket>(window.onPointerDataPacket, window._onPointerDataPacketZone, dataPacket);
+    final int dataProcessed = developer.Timeline.now - listPopulated;
+    _updatePointerDataPacketProcessedMicros += dataProcessed;
+    _unpackDummyPointerData(length);
+  }
 }
 
 @pragma('vm:entry-point')
@@ -436,8 +455,6 @@ PointerDataPacket _unpackPointerDataPacket(ByteData packet) {
   const int kBytesPerPointerData = _kPointerDataFieldCount * kStride;
   final int length = packet.lengthInBytes ~/ kBytesPerPointerData;
   assert(length * kBytesPerPointerData == packet.lengthInBytes);
-  _unpackDummyPointerData(length);
-  final int start = developer.Timeline.now;
   //final List<PointerData> data = <PointerData>[];
   final List<PointerData> data = List.filled(length, _dummyPointerData, growable: false);
   _updatePointerDataPacketSize += length;
@@ -474,16 +491,6 @@ PointerDataPacket _unpackPointerDataPacket(ByteData packet) {
       scrollDeltaY: packet.getFloat64(kStride * offset++, _kFakeHostEndian)
     ));
     assert(offset == (i + 1) * _kPointerDataFieldCount);
-  }
-  final int listPopulated = developer.Timeline.now;
-  _updatePointerDataPacketCount++;
-  final int time = listPopulated - start;
-  _updatePointerDataPacketMicros += time;
-  if (time > _updatePointerDataPacketMaxMicros) {
-    _updatePointerDataPacketMaxMicros = time;
-  }
-  if (length > _updatePointerDataPacketMaxLength) {
-    _updatePointerDataPacketMaxLength = length;
   }
   return PointerDataPacket(data: data);
 }
