@@ -527,3 +527,75 @@ double convertSigmaToRadius(double sigma) {
 bool isUnsoundNull(dynamic object) {
   return object == null;
 }
+
+/// Efficiently constructs [Float32List] objects of unknown size.
+///
+/// The construction is done in chunks. To get the final list call
+/// [build], which will stitch the chunks into one list of the
+/// desired size.
+class Float32ListBuilder {
+  static const int _kChunkLength = 20;
+
+  List<Float32List>? _chunks;
+  Float32List _currentChunk = _createChunk();
+  int _currentLength = 0;
+
+  static Float32List _createChunk() => Float32List(_kChunkLength);
+
+  /// Adds [element] to the end of the list.
+  void add(double element) {
+    if (_currentLength == _kChunkLength) {
+      final List<Float32List> chunks = (_chunks ??= <Float32List>[]);
+      chunks.add(_currentChunk);
+      _currentChunk = _createChunk();
+      _currentLength = 0;
+    }
+    _currentChunk[_currentLength] = element;
+    _currentLength += 1;
+  }
+
+  /// Removes all elements from the list.
+  void clear() {
+    _chunks = null;
+    _currentChunk = _createChunk();
+    _currentLength = 0;
+  }
+
+  /// Converts this builder into a flat [Float32List].
+  Float32List build() {
+    final List<Float32List>? chunks = _chunks;
+    if (chunks == null) {
+      // We only have one chunk, so we can avoid copying data.
+      if (_currentLength == _kChunkLength) {
+        // We have exactly one chunk that's exactly the right size.
+        // Just return it.
+        return _currentChunk;
+      } else {
+        // We only partially populated the first chunk. Instead of
+        // copying data, return a view in the chunk with truncated size.
+        assert(_currentLength < _kChunkLength);
+        return Float32List.sublistView(_currentChunk, 0, _currentLength);
+      }
+    } else {
+      // In the more general case, we may have accumulated multiple
+      // chunks. We now need to construct a list of the final length
+      // and copy the data into it.
+      final int chunkCount = chunks.length;
+      final int totalLength = chunkCount * _kChunkLength + _currentLength;
+      final Float32List result = Float32List(totalLength);
+      int index = 0;
+      for (int i = 0; i < chunkCount; i++) {
+        final Float32List chunk = chunks[i];
+        for (int j = 0; j < _kChunkLength; j++) {
+          result[index] = chunk[j];
+          index += 1;
+        }
+      }
+      for (int j = 0; j < _currentLength; j++) {
+        result[index] = _currentChunk[j];
+        index += 1;
+      }
+      return result;
+    }
+  }
+}

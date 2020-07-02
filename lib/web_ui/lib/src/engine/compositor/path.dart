@@ -51,7 +51,6 @@ class CkPath implements ui.Path {
 
   @override
   void addArc(ui.Rect oval, double startAngle, double sweepAngle) {
-    const double toDegrees = 180.0 / math.pi;
     _skPath!.callMethod('addArc', <dynamic>[
       makeSkRect(oval),
       startAngle * toDegrees,

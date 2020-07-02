@@ -36,4 +36,18 @@ void main() {
     expect(transformKindOf(rotation2d), TransformKind.transform2d);
     expect(isIdentityFloat32ListTransform(rotation2d), isFalse);
   });
+
+  test('Float32ListBuilder', () {
+    for (int testLength = 0; testLength < 300; testLength++) {
+      final Float32ListBuilder builder = Float32ListBuilder();
+      for (int i = 0; i < testLength; i++) {
+        builder.add(i.toDouble());
+      }
+      final Float32List result = builder.build();
+      expect(result.length, testLength);
+      for (int i = 0; i < testLength; i++) {
+        expect(result[i], i.toDouble());
+      }
+    }
+  });
 }
