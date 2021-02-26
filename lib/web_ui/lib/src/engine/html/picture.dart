@@ -206,10 +206,14 @@ class PersistedPicture extends PersistedLeafSurface {
     if (parent!._projectedClip == null) {
       _exactLocalCullRect = localPaintBounds;
     } else {
-      Matrix4? invertedTransform = Matrix4.tryInvert(parent!.transform!);
-      _exactLocalCullRect =
-           localPaintBounds!.intersect(transformRect(invertedTransform!, parent!._projectedClip!));
-      _exactLocalCullRect = localPaintBounds;
+      final Matrix4? invertedTransform = Matrix4.tryInvert(parent!.transform!);
+      if (invertedTransform == null) {
+        _exactLocalCullRect = ui.Rect.zero;
+      } else {
+        _exactLocalCullRect =
+            localPaintBounds!.intersect(transformRect(invertedTransform, parent!._projectedClip!));
+        _exactLocalCullRect = localPaintBounds;
+      }
     }
     if (_exactLocalCullRect!.width <= 0 || _exactLocalCullRect!.height <= 0) {
       _exactLocalCullRect = ui.Rect.zero;
