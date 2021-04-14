@@ -511,7 +511,6 @@ class EditingState {
 /// This corresponds to Flutter's [TextInputConfiguration].
 class InputConfiguration {
   InputConfiguration({
-    required this.editableTextId,
     this.inputType = EngineInputType.text,
     this.inputAction = 'TextInputAction.done',
     this.obscureText = false,
@@ -525,8 +524,7 @@ class InputConfiguration {
 
   InputConfiguration.fromFrameworkMessage(
       Map<String, dynamic> flutterInputConfiguration)
-      : editableTextId = flutterInputConfiguration['editableTextId'],
-        inputType = EngineInputType.fromName(
+      : inputType = EngineInputType.fromName(
           flutterInputConfiguration['inputType']['name'],
           isDecimal: flutterInputConfiguration['inputType']['decimal'] ?? false,
         ),
@@ -545,8 +543,6 @@ class InputConfiguration {
         autofillGroup = EngineAutofillForm.fromFrameworkMessage(
             flutterInputConfiguration['autofill'],
             flutterInputConfiguration['fields']);
-
-  final int editableTextId;
 
   /// The type of information being edited in the input control.
   final EngineInputType inputType;
@@ -1670,14 +1666,13 @@ class HybridTextEditing {
   InputConfiguration? configuration;
 
   final List<QueuedTextInputCommand> _commandQueue = <QueuedTextInputCommand>[];
-  int? get currentEditableTextId => configuration?.editableTextId;
   final Map<int, DefaultTextEditingStrategy> _strategies = <int, DefaultTextEditingStrategy>{};
 
   DefaultTextEditingStrategy get currentStrategy {
-    assert(this.currentEditableTextId != null);
-    final int currentEditableTextId = this.currentEditableTextId!;
-    assert(_strategies.containsKey(currentEditableTextId));
-    return _strategies[currentEditableTextId]!;
+    assert(this._clientId != null);
+    final int clientId = this._clientId!;
+    assert(_strategies.containsKey(clientId));
+    return _strategies[clientId]!;
   }
 
   /// Registers the strategy to be used to provide editing functionality for
@@ -1700,7 +1695,7 @@ class HybridTextEditing {
   }
 
   void initializeDefaultTextEditingElement() {
-    assert(currentEditableTextId != null);
+    assert(_clientId != null);
     late final DefaultTextEditingStrategy strategy;
     if (browserEngine == BrowserEngine.webkit &&
         operatingSystem == OperatingSystem.iOs) {
@@ -1715,7 +1710,7 @@ class HybridTextEditing {
     } else {
       strategy = GloballyPositionedTextEditingStrategy(this);
     }
-    registerEditingElement(currentEditableTextId!, strategy);
+    registerEditingElement(_clientId!, strategy);
   }
 
   void acceptCommand(TextInputCommand command, ui.VoidCallback callback) {
@@ -1735,12 +1730,12 @@ class HybridTextEditing {
       return;
     }
 
-    final int? editableTextId = currentEditableTextId;
-    if (editableTextId == null) {
+    final int? clientId = _clientId;
+    if (clientId == null) {
       return;
     }
 
-    final DefaultTextEditingStrategy? strategy = _strategies[editableTextId];
+    final DefaultTextEditingStrategy? strategy = _strategies[clientId];
     if (strategy == null) {
       return;
     }
@@ -1782,7 +1777,7 @@ class HybridTextEditing {
     // When not in a11y mode, remove the editing element eagerly. a11y text
     // fields are cleaned up through semantics update.
     if (!EngineSemanticsOwner.instance.semanticsEnabled) {
-      unregisterEditingElement(currentEditableTextId!);
+      unregisterEditingElement(_clientId!);
     }
   }
 
