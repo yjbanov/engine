@@ -922,7 +922,6 @@ class EnginePlatformDispatcher extends ui.PlatformDispatcher {
   /// to set [locationStrategy] in `lib/src/ui/initialization.dart`.
   String? _defaultRouteName;
 
-  @visibleForTesting
   late Rasterizer? rasterizer =
       useCanvasKit ? Rasterizer(Surface(HtmlViewEmbedder())) : null;
 

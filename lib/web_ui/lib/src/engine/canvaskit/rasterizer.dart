@@ -13,6 +13,7 @@ import 'surface.dart';
 class Rasterizer {
   final Surface surface;
   final CompositorContext context = CompositorContext();
+  final List<ui.VoidCallback> _oneTimePostFrameCallbacks = <ui.VoidCallback>[];
   final List<ui.VoidCallback> _postFrameCallbacks = <ui.VoidCallback>[];
 
   Rasterizer(this.surface);
@@ -44,11 +45,28 @@ class Rasterizer {
     }
   }
 
+  /// Schedules a persistent [callback] to be run at the end of every frame.
+  ///
+  /// If added outside a frame, will start running in the next frame.
   void addPostFrameCallback(ui.VoidCallback callback) {
     _postFrameCallbacks.add(callback);
   }
 
+  /// Schedules the [callback] to be run once at the end of the current frame.
+  ///
+  /// If added outside a frame, will run at the end of the next frame.
+  void addOneTimePostFrameCallback(ui.VoidCallback callback) {
+    _oneTimePostFrameCallbacks.add(callback);
+  }
+
   void _runPostFrameCallbacks() {
+    if (_oneTimePostFrameCallbacks.isNotEmpty) {
+      final List<ui.VoidCallback> oneTimeCallbacks = _oneTimePostFrameCallbacks.toList();
+      _oneTimePostFrameCallbacks.clear();
+      for (int i = 0; i < oneTimeCallbacks.length; i++) {
+        oneTimeCallbacks[i].call();
+      }
+    }
     for (int i = 0; i < _postFrameCallbacks.length; i++) {
       final ui.VoidCallback callback = _postFrameCallbacks[i];
       callback();

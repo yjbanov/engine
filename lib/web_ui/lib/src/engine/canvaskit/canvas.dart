@@ -5,6 +5,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:ui/src/engine/canvaskit/initialization.dart';
 import 'package:ui/ui.dart' as ui;
 
 import 'canvaskit_api.dart';
@@ -203,12 +204,11 @@ class CkCanvas {
     skCanvas.drawPaint(paint.skiaObject);
   }
 
+  static final SkPaint drawParagraphPaint = SkPaint()
+    ..setStyle(canvasKit.PaintStyle.Fill);
+
   void drawParagraph(CkParagraph paragraph, ui.Offset offset) {
-    skCanvas.drawParagraph(
-      paragraph.skiaObject,
-      offset.dx,
-      offset.dy,
-    );
+    _drawGlyphs(skCanvas, paragraph, offset);
   }
 
   void drawPath(CkPath path, CkPaint paint) {
@@ -1083,11 +1083,7 @@ class CkDrawParagraphCommand extends CkPaintCommand {
 
   @override
   void apply(SkCanvas canvas) {
-    canvas.drawParagraph(
-      paragraph.skiaObject,
-      offset.dx,
-      offset.dy,
-    );
+    _drawGlyphs(canvas, paragraph, offset);
   }
 }
 
@@ -1152,5 +1148,40 @@ class CkSaveLayerWithFilterCommand extends CkPaintCommand {
       convertible.imageFilter.skiaObject,
       0,
     );
+  }
+}
+
+void _drawGlyphs(SkCanvas canvas, CkParagraph paragraph, ui.Offset offset) {
+  // canvas.drawParagraph(paragraph.skParagraph!, offset.dx, offset.dy);
+  // canvas.drawRect(
+  //   Float32List(4)
+  //     ..[0] = offset.dx
+  //     ..[1] = offset.dy
+  //     ..[2] = offset.dx + paragraph.width
+  //     ..[3] = offset.dy + paragraph.height,
+  //   drawParagraphPaint,
+  // );
+  final List<ShapedLine> lines = paragraph.shapedLines;
+  for (final ShapedLine line in lines) {
+    final List<GlyphRun> runs = line.runs;
+    for (final GlyphRun run in runs) {
+      final SkPaint paint = SkPaint();
+      final SkFont font = SkFont(
+        // TODO(yjbanov): run.typeface always returns null; fix before submitting
+        // run.typeface,
+        skiaFontCollection.familyToTypefaceMap['Roboto']!.first,
+        run.size,
+      );
+      canvas.drawGlyphs(
+        run.glyphs,
+        run.positions,
+        offset.dx,
+        offset.dy,
+        font,
+        paint,
+      );
+      font.delete();
+      paint.delete();
+    }
   }
 }

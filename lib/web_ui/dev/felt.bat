@@ -43,6 +43,7 @@ for %%x in (%*) do (
 IF NOT EXIST %OUT_DIR% (SET needsHostDebugUnoptRebuild=1)
 IF NOT EXIST %HOST_DEBUG_UNOPT_DIR% (SET needsHostDebugUnoptRebuild=1)
 
+cd %FLUTTER_DIR%
 IF %needsHostDebugUnoptRebuild%==1 (
   ECHO Building host_debug_unopt
   :: Delete old snapshot, if any, because the new Dart SDK may invalidate it.

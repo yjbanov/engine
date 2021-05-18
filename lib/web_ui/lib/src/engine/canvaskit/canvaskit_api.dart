@@ -1529,6 +1529,22 @@ class SkCanvas {
     double x,
     double y,
   );
+
+  /// Draws a run of glyphs, at corresponding positions, in a given font.
+  /// @param glyphs the array of glyph IDs (Uint16TypedArray)
+  /// @param positions the array of x,y floats to position each glyph
+  /// @param x x-coordinate of the origin of the entire run
+  /// @param x y-coordinate of the origin of the entire run
+  /// @param font the font that contains the glyphs
+  /// @param paint
+  external void drawGlyphs(
+    Uint16List glyphs,
+    Float32List positions,
+    double x,
+    double y,
+    SkFont font,
+    SkPaint paint,
+  );
 }
 
 @JS()
@@ -1731,10 +1747,11 @@ class SkTypeface {}
 
 @JS('window.flutterCanvasKit.Font')
 class SkFont {
-  external SkFont(SkTypeface typeface);
+  external SkFont(SkTypeface typeface, [double size]);
   external Uint8List getGlyphIDs(String text);
   external void getGlyphBounds(
       List<int> glyphs, SkPaint? paint, Uint8List? output);
+  external void delete();
 }
 
 @JS()
@@ -1770,6 +1787,37 @@ class SkLineMetrics {
 
 @JS()
 @anonymous
+class GlyphRun {
+  external SkTypeface get typeface;
+  external double get size;
+  external bool get fakeBold;
+  external bool get fakeItalic;
+
+  external Uint16List get glyphs;
+  external Float32List get positions;    // alternating x0, y0, x1, y1, ...
+  external Uint32List get offsets;
+  external int get flags;
+}
+
+@JS()
+@anonymous
+class Range {
+  external int get first;
+  external int get last;
+}
+
+@JS()
+@anonymous
+class ShapedLine {
+  external Range get textRange;
+  external double get top;
+  external double get bottom;
+  external double get baseline;
+  external List<GlyphRun> get runs;
+}
+
+@JS()
+@anonymous
 class SkParagraph {
   external double getAlphabeticBaseline();
   external bool didExceedMaxLines();
@@ -1780,19 +1828,20 @@ class SkParagraph {
   external double getMaxIntrinsicWidth();
   external double getMinIntrinsicWidth();
   external double getMaxWidth();
-  external List<Float32List> getRectsForRange(
+  external Float32List getRectsForRange(
     int start,
     int end,
     SkRectHeightStyle heightStyle,
     SkRectWidthStyle widthStyle,
   );
-  external List<Float32List> getRectsForPlaceholders();
+  external Float32List getRectsForPlaceholders();
   external SkTextPosition getGlyphPositionAtCoordinate(
     double x,
     double y,
   );
   external SkTextRange getWordBoundary(int position);
   external void layout(double width);
+  external List<Object> getShapedLines();
   external void delete();
 }
 
