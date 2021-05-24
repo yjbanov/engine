@@ -1747,10 +1747,12 @@ class SkTypeface {}
 
 @JS('window.flutterCanvasKit.Font')
 class SkFont {
-  external SkFont(SkTypeface typeface, [double size]);
+  external SkFont([SkTypeface typeface, double size]);
   external Uint8List getGlyphIDs(String text);
   external void getGlyphBounds(
       List<int> glyphs, SkPaint? paint, Uint8List? output);
+  external void setSize(double size);
+  external void setTypeface(SkTypeface typeface);
   external void delete();
 }
 

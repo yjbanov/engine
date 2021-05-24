@@ -1151,6 +1151,9 @@ class CkSaveLayerWithFilterCommand extends CkPaintCommand {
   }
 }
 
+final SkPaint _drawGlyphsPaint = SkPaint();
+final SkFont _drawGlyphsFont = SkFont();
+
 void _drawGlyphs(SkCanvas canvas, CkParagraph paragraph, ui.Offset offset) {
   // canvas.drawParagraph(paragraph.skParagraph!, offset.dx, offset.dy);
   // canvas.drawRect(
@@ -1165,23 +1168,16 @@ void _drawGlyphs(SkCanvas canvas, CkParagraph paragraph, ui.Offset offset) {
   for (final ShapedLine line in lines) {
     final List<GlyphRun> runs = line.runs;
     for (final GlyphRun run in runs) {
-      final SkPaint paint = SkPaint();
-      final SkFont font = SkFont(
-        // TODO(yjbanov): run.typeface always returns null; fix before submitting
-        // run.typeface,
-        skiaFontCollection.familyToTypefaceMap['Roboto']!.first,
-        run.size,
-      );
+      _drawGlyphsFont.setTypeface(run.typeface);
+      _drawGlyphsFont.setSize(run.size);
       canvas.drawGlyphs(
         run.glyphs,
         run.positions,
         offset.dx,
         offset.dy,
-        font,
-        paint,
+        _drawGlyphsFont,
+        _drawGlyphsPaint,
       );
-      font.delete();
-      paint.delete();
     }
   }
 }

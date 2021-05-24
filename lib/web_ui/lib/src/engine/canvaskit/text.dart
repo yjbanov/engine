@@ -568,7 +568,6 @@ class CkParagraph implements ui.Paragraph {
   static final List<CkParagraph> _cleanUpQueue = <CkParagraph>[];
   static bool _isCleanUpScheduled = false;
   static void flushCleanUpQueue() {
-    print('>>> Flushing ${_cleanUpQueue.length} paragraphs');
     _isCleanUpScheduled = false;
     for (CkParagraph paragraph in _cleanUpQueue) {
       paragraph._skParagraph?.delete();
@@ -619,7 +618,6 @@ class CkParagraph implements ui.Paragraph {
 
     if (!_isCleanUpScheduled) {
       _isCleanUpScheduled = true;
-      print('>>> scheduling flushCleanUpQueue');
       EnginePlatformDispatcher.instance.rasterizer!.addOneTimePostFrameCallback(flushCleanUpQueue);
     }
   }
