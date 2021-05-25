@@ -8,12 +8,10 @@ import 'package:meta/meta.dart';
 import 'package:ui/ui.dart' as ui;
 
 import '../util.dart';
-import 'canvas.dart';
 import 'canvaskit_api.dart';
 import 'font_fallbacks.dart';
 import 'initialization.dart';
 import 'painting.dart';
-import 'picture_recorder.dart';
 import 'util.dart';
 
 // TODO(yjbanov): remove cyclic dependency
@@ -222,6 +220,7 @@ class CkTextStyle implements ui.TextStyle {
     List<ui.FontFeature>? fontFeatures,
   }) {
     return CkTextStyle._(
+      false,
       color,
       decoration,
       decorationColor,
@@ -246,6 +245,7 @@ class CkTextStyle implements ui.TextStyle {
   }
 
   CkTextStyle._(
+    this.isResolved,
     this.color,
     this.decoration,
     this.decorationColor,
@@ -268,6 +268,7 @@ class CkTextStyle implements ui.TextStyle {
     this.fontFeatures,
   );
 
+  final bool isResolved;
   final ui.Color? color;
   final ui.TextDecoration? decoration;
   final ui.Color? decorationColor;
@@ -294,27 +295,28 @@ class CkTextStyle implements ui.TextStyle {
   /// The values in this text style are used unless [other] specifically
   /// overrides it.
   CkTextStyle mergeWith(CkTextStyle other) {
-    return CkTextStyle(
-      color: other.color ?? color,
-      decoration: other.decoration ?? decoration,
-      decorationColor: other.decorationColor ?? decorationColor,
-      decorationStyle: other.decorationStyle ?? decorationStyle,
-      decorationThickness: other.decorationThickness ?? decorationThickness,
-      fontWeight: other.fontWeight ?? fontWeight,
-      fontStyle: other.fontStyle ?? fontStyle,
-      textBaseline: other.textBaseline ?? textBaseline,
-      fontFamily: other.fontFamily ?? fontFamily,
-      fontFamilyFallback: other.fontFamilyFallback ?? fontFamilyFallback,
-      fontSize: other.fontSize ?? fontSize,
-      letterSpacing: other.letterSpacing ?? letterSpacing,
-      wordSpacing: other.wordSpacing ?? wordSpacing,
-      height: other.height ?? height,
-      leadingDistribution: other.leadingDistribution ?? leadingDistribution,
-      locale: other.locale ?? locale,
-      background: other.background ?? background,
-      foreground: other.foreground ?? foreground,
-      shadows: other.shadows ?? shadows,
-      fontFeatures: other.fontFeatures ?? fontFeatures,
+    return CkTextStyle._(
+      true,
+      other.color ?? color,
+      other.decoration ?? decoration,
+      other.decorationColor ?? decorationColor,
+      other.decorationStyle ?? decorationStyle,
+      other.decorationThickness ?? decorationThickness,
+      other.fontWeight ?? fontWeight,
+      other.fontStyle ?? fontStyle,
+      other.textBaseline ?? textBaseline,
+      other.fontFamily ?? fontFamily,
+      other.fontFamilyFallback ?? fontFamilyFallback,
+      other.fontSize ?? fontSize,
+      other.letterSpacing ?? letterSpacing,
+      other.wordSpacing ?? wordSpacing,
+      other.height ?? height,
+      other.leadingDistribution ?? leadingDistribution,
+      other.locale ?? locale,
+      other.background ?? background,
+      other.foreground ?? foreground,
+      other.shadows ?? shadows,
+      other.fontFeatures ?? fontFeatures,
     );
   }
 
@@ -530,7 +532,7 @@ SkFontStyle toSkFontStyle(ui.FontWeight? fontWeight, ui.FontStyle? fontStyle) {
 
 class CkParagraph implements ui.Paragraph {
   CkParagraph(
-      this._skParagraph, this._paragraphStyle, this._paragraphCommands);
+      this._skParagraph, this._paragraphStyle, this._paragraphTextStyle, this._paragraphCommands);
 
   /// The result of calling `build()` on the JS CkParagraphBuilder.
   ///
@@ -543,6 +545,9 @@ class CkParagraph implements ui.Paragraph {
   /// This is used to resurrect the paragraph if the initial paragraph
   /// is deleted.
   final CkParagraphStyle _paragraphStyle;
+
+  /// [_paragraphStyle] converted to a textstyle.
+  final CkTextStyle _paragraphTextStyle;
 
   /// The paragraph builder commands used to build this paragraph.
   ///
@@ -770,6 +775,24 @@ class CkParagraph implements ui.Paragraph {
     }
     return result;
   }
+
+  /// Finds the text style effective at the given character [index].
+  // TODO(yjbanov): to avoid the O(runs X styles) problem, maybe it's better to
+  //                return the array of paragraph commands so that CkCanvas can
+  //                scan it forward once?
+  CkTextStyle getStyleAt(int index) {
+    CkTextStyle currentStyle = _paragraphTextStyle;
+    for (_ParagraphCommand command in _paragraphCommands) {
+      if (command.index > index) {
+        return currentStyle;
+      }
+      CkTextStyle? commandStyle = command.style;
+      if (commandStyle != null) {
+        currentStyle = commandStyle;
+      }
+    }
+    return currentStyle;
+  }
 }
 
 class CkLineMetrics implements ui.LineMetrics {
@@ -815,6 +838,8 @@ class CkParagraphBuilder implements ui.ParagraphBuilder {
   final List<double> _placeholderScales;
   final List<CkTextStyle> _styleStack;
 
+  int index = 0;
+
   CkParagraphBuilder(ui.ParagraphStyle style)
       : _commands = <_ParagraphCommand>[],
         _style = style as CkParagraphStyle,
@@ -857,7 +882,7 @@ class CkParagraphBuilder implements ui.ParagraphBuilder {
   }
 
   void _addPlaceholder(_CkParagraphPlaceholder placeholderStyle) {
-    _commands.add(_ParagraphCommand.addPlaceholder(placeholderStyle));
+    _commands.add(_ParagraphCommand.addPlaceholder(index, placeholderStyle));
     _paragraphBuilder.addPlaceholder(
       placeholderStyle.width,
       placeholderStyle.height,
@@ -1052,14 +1077,15 @@ class CkParagraphBuilder implements ui.ParagraphBuilder {
   @override
   void addText(String text) {
     _ensureFontsSupportText(text, _peekStyle().fontSize ?? 10);
-    _commands.add(_ParagraphCommand.addText(text));
+    _commands.add(_ParagraphCommand.addText(index, text));
     _paragraphBuilder.addText(text);
+    index += text.length;
   }
 
   @override
   CkParagraph build() {
     final builtParagraph = _buildSkParagraph();
-    return CkParagraph(builtParagraph, _style, _commands);
+    return CkParagraph(builtParagraph, _style, _styleStack.first, _commands);
   }
 
   /// Builds the CkParagraph with the builder and deletes the builder.
@@ -1087,8 +1113,8 @@ class CkParagraphBuilder implements ui.ParagraphBuilder {
       }
       return;
     }
-    _commands.add(const _ParagraphCommand.pop());
     _styleStack.removeLast();
+    _commands.add(_ParagraphCommand.pop(index, _styleStack.last));
     _paragraphBuilder.pop();
   }
 
@@ -1110,26 +1136,32 @@ class CkParagraphBuilder implements ui.ParagraphBuilder {
 
   @override
   void pushStyle(ui.TextStyle style) {
-    final CkTextStyle baseStyle = _peekStyle();
     final CkTextStyle ckStyle = style as CkTextStyle;
-    final CkTextStyle skStyle = baseStyle.mergeWith(ckStyle);
-    _styleStack.add(skStyle);
-    _commands.add(_ParagraphCommand.pushStyle(ckStyle));
-    if (skStyle.foreground != null || skStyle.background != null) {
-      SkPaint? foreground = skStyle.foreground?.skiaObject;
+    final CkTextStyle resolvedStyle;
+    if (ckStyle.isResolved) {
+      resolvedStyle = ckStyle;
+    } else {
+      final CkTextStyle baseStyle = _peekStyle();
+      resolvedStyle = baseStyle.mergeWith(ckStyle);
+      assert(resolvedStyle.isResolved);
+    }
+    _styleStack.add(resolvedStyle);
+    _commands.add(_ParagraphCommand.pushStyle(index, resolvedStyle));
+    if (resolvedStyle.foreground != null || resolvedStyle.background != null) {
+      SkPaint? foreground = resolvedStyle.foreground?.skiaObject;
       if (foreground == null) {
         _defaultTextForeground.setColorInt(
-          skStyle.color?.value ?? 0xFF000000,
+          resolvedStyle.color?.value ?? 0xFF000000,
         );
         foreground = _defaultTextForeground;
       }
 
       final SkPaint background =
-          skStyle.background?.skiaObject ?? _defaultTextBackground;
+          resolvedStyle.background?.skiaObject ?? _defaultTextBackground;
       _paragraphBuilder.pushPaintStyle(
-          skStyle.skTextStyle, foreground, background);
+          resolvedStyle.skTextStyle, foreground, background);
     } else {
-      _paragraphBuilder.pushStyle(skStyle.skTextStyle);
+      _paragraphBuilder.pushStyle(resolvedStyle.skTextStyle);
     }
   }
 }
@@ -1151,31 +1183,33 @@ class _CkParagraphPlaceholder {
 }
 
 class _ParagraphCommand {
+  final int index;
   final _ParagraphCommandType type;
   final String? text;
   final CkTextStyle? style;
   final _CkParagraphPlaceholder? placeholderStyle;
 
   const _ParagraphCommand._(
+    this.index,
     this.type,
     this.text,
     this.style,
     this.placeholderStyle,
   );
 
-  const _ParagraphCommand.addText(String text)
-      : this._(_ParagraphCommandType.addText, text, null, null);
+  const _ParagraphCommand.addText(int index, String text)
+      : this._(index, _ParagraphCommandType.addText, text, null, null);
 
-  const _ParagraphCommand.pop()
-      : this._(_ParagraphCommandType.pop, null, null, null);
+  const _ParagraphCommand.pop(int index, CkTextStyle style)
+      : this._(index, _ParagraphCommandType.pop, null, style, null);
 
-  const _ParagraphCommand.pushStyle(CkTextStyle style)
-      : this._(_ParagraphCommandType.pushStyle, null, style, null);
+  _ParagraphCommand.pushStyle(int index, CkTextStyle style)
+      : this._(index, _ParagraphCommandType.pushStyle, null, style, null);
 
   const _ParagraphCommand.addPlaceholder(
-      _CkParagraphPlaceholder placeholderStyle)
-      : this._(
-            _ParagraphCommandType.addPlaceholder, null, null, placeholderStyle);
+    int index,
+    _CkParagraphPlaceholder placeholderStyle,
+  ) : this._(index, _ParagraphCommandType.addPlaceholder, null, null, placeholderStyle);
 }
 
 enum _ParagraphCommandType {

@@ -1790,7 +1790,7 @@ class SkLineMetrics {
 @JS()
 @anonymous
 class GlyphRun {
-  external SkTypeface get typeface;
+  external SkTypeface? get typeface;
   external double get size;
   external bool get fakeBold;
   external bool get fakeItalic;

@@ -1152,32 +1152,71 @@ class CkSaveLayerWithFilterCommand extends CkPaintCommand {
 }
 
 final SkPaint _drawGlyphsPaint = SkPaint();
+final SkPaint _drawGlyphsDecorationPaint = SkPaint()
+  ..setStyle(canvasKit.PaintStyle.Stroke);
 final SkFont _drawGlyphsFont = SkFont();
+const int _kDefaultTextColor = 0xFF000000;
+const int _kDefaultTextDecorationColor = 0xFF000000;
 
 void _drawGlyphs(SkCanvas canvas, CkParagraph paragraph, ui.Offset offset) {
-  // canvas.drawParagraph(paragraph.skParagraph!, offset.dx, offset.dy);
-  // canvas.drawRect(
-  //   Float32List(4)
-  //     ..[0] = offset.dx
-  //     ..[1] = offset.dy
-  //     ..[2] = offset.dx + paragraph.width
-  //     ..[3] = offset.dy + paragraph.height,
-  //   drawParagraphPaint,
-  // );
   final List<ShapedLine> lines = paragraph.shapedLines;
   for (final ShapedLine line in lines) {
     final List<GlyphRun> runs = line.runs;
     for (final GlyphRun run in runs) {
-      _drawGlyphsFont.setTypeface(run.typeface);
+
+      // TODO(yjbanov): implement all text style-related things
+      // ui.TextDecoration? decoration,
+      // ui.Color? decorationColor,
+      // ui.TextDecorationStyle? decorationStyle,
+      // double? decorationThickness,
+      // List<ui.Shadow>? shadows,
+
+      final CkTextStyle style = paragraph.getStyleAt(run.offsets[0]);
+
+      final CkPaint? background = style.background;
+      if (background != null) {
+        canvas.drawRect(
+          Float32List(4)
+            ..[0] = offset.dx + run.positions[0]
+            ..[1] = offset.dy + line.top
+            ..[2] = offset.dx + run.positions[run.positions.length - 2]
+            ..[3] = offset.dy + line.bottom,
+          background.skiaObject,
+        );
+      }
+
+      // TODO(yjbanov): CanvasKit should never return null typeface.
+      // assert(run.typeface != null);
+      _drawGlyphsFont.setTypeface(run.typeface ?? skiaFontCollection.familyToTypefaceMap['Roboto']!.first);
       _drawGlyphsFont.setSize(run.size);
+
+      final CkPaint? foreground = style.foreground;
+      if (foreground == null) {
+        _drawGlyphsPaint.setColorInt(style.color?.value ?? _kDefaultTextColor);
+      }
+
       canvas.drawGlyphs(
         run.glyphs,
         run.positions,
         offset.dx,
         offset.dy,
         _drawGlyphsFont,
-        _drawGlyphsPaint,
+        foreground?.skiaObject ?? _drawGlyphsPaint,
       );
+
+      final ui.TextDecoration? decoration = style.decoration;
+      if (decoration != null && decoration != ui.TextDecoration.none) {
+        _drawGlyphsDecorationPaint.setColorInt(style.decorationColor?.value ?? _kDefaultTextDecorationColor);
+        if (decoration == ui.TextDecoration.underline) {
+          canvas.drawLine(
+            offset.dx + run.positions[0],
+            offset.dy + line.bottom,
+            offset.dx + run.positions[run.positions.length - 2],
+            offset.dy + line.bottom,
+            _drawGlyphsDecorationPaint,
+          );
+        }
+      }
     }
   }
 }
