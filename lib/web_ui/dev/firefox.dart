@@ -12,6 +12,7 @@ import 'package:test_api/src/backend/runtime.dart';
 import 'package:test_core/src/util/io.dart';
 
 import 'browser.dart';
+import 'browser_lock.dart';
 import 'common.dart';
 import 'environment.dart';
 import 'firefox_installer.dart';
@@ -55,11 +56,10 @@ class Firefox extends Browser {
   /// Starts a new instance of Firefox open to the given [url], which may be a
   /// [Uri] or a [String].
   factory Firefox(Uri url, {bool debug = false}) {
-    final String version = FirefoxArgParser.instance.version;
     final Completer<Uri> remoteDebuggerCompleter = Completer<Uri>.sync();
     return Firefox._(() async {
       final BrowserInstallation installation = await getOrInstallFirefox(
-        version,
+        browserLock.firefoxLock.version,
         infoLog: isCirrus ? stdout : DevNull(),
       );
 

@@ -9,8 +9,9 @@ import 'package:args/command_runner.dart';
 import 'build.dart';
 import 'clean.dart';
 import 'create_simulator.dart';
-import 'licenses.dart';
 import 'exceptions.dart';
+import 'licenses.dart';
+import 'run.dart';
 import 'test_runner.dart';
 import 'utils.dart';
 
@@ -18,11 +19,12 @@ CommandRunner<bool> runner = CommandRunner<bool>(
   'felt',
   'Command-line utility for building and testing Flutter web engine.',
 )
+  ..addCommand(BuildCommand())
   ..addCommand(CleanCommand())
   ..addCommand(CreateSimulatorCommand())
   ..addCommand(LicensesCommand())
-  ..addCommand(TestCommand())
-  ..addCommand(BuildCommand());
+  ..addCommand(RunCommand())
+  ..addCommand(TestCommand());
 
 void main(List<String> rawArgs) async {
   // Remove --clean from the list as that's processed by the wrapper script.
@@ -38,17 +40,17 @@ void main(List<String> rawArgs) async {
 
   int exitCode = -1;
   try {
-    final bool result = (await runner.run(args)) as bool;
-    if (result == false) {
+    final bool? result = await runner.run(args);
+    if (result != true) {
       print('Sub-command failed: `${args.join(' ')}`');
       exitCode = 1;
     }
   } on UsageException catch (e) {
     print(e);
     exitCode = 64; // Exit code 64 indicates a usage error.
-  } on ToolException catch (e) {
-    io.stderr.writeln(e.message);
-    exitCode = 1;
+  } on ToolExit catch (exception) {
+    io.stderr.writeln(exception.message);
+    exitCode = exception.exitCode;
   } on ProcessException catch (e) {
     io.stderr.writeln('description: ${e.description}'
         'executable: ${e.executable} '

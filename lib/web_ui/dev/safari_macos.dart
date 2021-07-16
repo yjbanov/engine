@@ -48,11 +48,8 @@ class SafariMacOs extends Browser {
   /// Starts a new instance of Safari open to the given [url], which may be a
   /// [Uri].
   factory SafariMacOs(Uri url) {
-    final String version = SafariArgParser.instance.version;
     return SafariMacOs._(() async {
-      // TODO(nurhan): Configure info log for LUCI.
       final BrowserInstallation installation = await getOrInstallSafari(
-        version,
         infoLog: DevNull(),
       );
 

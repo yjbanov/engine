@@ -109,7 +109,7 @@ class BrowserPlatform extends PlatformPlugin {
     required this.packageConfig,
   }) {
     // The cascade of request handlers.
-    shelf.Cascade cascade = shelf.Cascade()
+    final shelf.Cascade cascade = shelf.Cascade()
         // The web socket that carries the test channels for running tests and
         // reporting restuls. See [_browserManagerFor] and [BrowserManager.start]
         // for details on how the channels are established.
@@ -148,12 +148,8 @@ class BrowserPlatform extends PlatformPlugin {
 
         // Serves absolute package URLs (i.e. not /packages/* but /Users/user/*/hosted/pub.dartlang.org/*).
         // This handler goes last, after all more specific handlers failed to handle the request.
-        .add(_createAbsolutePackageUrlHandler());
-
-    _screenshotManager = browserEnvironment.getScreenshotManager();
-    if (_screenshotManager != null) {
-      cascade = cascade.add(_screeshotHandler);
-    }
+        .add(_createAbsolutePackageUrlHandler())
+        .add(_screeshotHandler);
 
     server.mount(cascade.handler);
   }
@@ -236,6 +232,13 @@ class BrowserPlatform extends PlatformPlugin {
     if (!request.requestedUri.path.endsWith('/screenshot')) {
       return shelf.Response.notFound(
           'This request is not handled by the screenshot handler');
+    }
+
+    _screenshotManager = browserEnvironment.getScreenshotManager();
+    if (_screenshotManager == null) {
+      return shelf.Response.ok(json.encode(
+        'Current browser does not support screenshots.',
+      ));
     }
 
     final String payload = await request.readAsString();
