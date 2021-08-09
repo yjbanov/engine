@@ -1,0 +1,4 @@
+# THIS FILE IS GENERATED. DO NOT EDIT BY HAND.
+# Use the lib/web_ui/tool/font_sync_script.dart script to update this file.
+# Points to the CIPD package containing fallback fonts used by CanvasKit.
+cipd: "flutter/web_fallback_fonts/20210811_212348.zip"
