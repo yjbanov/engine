@@ -384,6 +384,11 @@ class CanvasKitRenderer implements Renderer {
 
   @override
   Future<ui.FragmentProgram> createFragmentProgram(String assetKey) {
+    final SkRuntimeEffectNamespace? rtEffectNs = canvasKit.RuntimeEffect;
+    if (rtEffectNs == null) {
+      throw UnsupportedError('CanvasKit build in use does not support RuntimeEffect.');
+    }
+
     if (_programs.containsKey(assetKey)) {
       return _programs[assetKey]!;
     }
@@ -398,7 +403,8 @@ class CanvasKitRenderer implements Renderer {
       if (source is! String || rawUniforms is! List<Object?>) {
         throw const FormatException('Invalid Shader Data');
       }
-      final SkRuntimeEffect? effect = MakeRuntimeEffect(source);
+
+      final SkRuntimeEffect? effect = rtEffectNs.MakeRuntimeEffect(source);
       if (effect == null) {
         throw const FormatException('Invalid Shader Data');
       }

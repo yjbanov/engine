@@ -168,6 +168,8 @@ extension CanvasKitExtension on CanvasKit {
   /// On Cobalt, this is the only way to get a Skia surface. Other CanvasKit
   /// Make...Surface methods are not supported.
   external SkSurface getH5vccSkSurface();
+
+  external SkRuntimeEffectNamespace? get RuntimeEffect;
 }
 
 @JS('window.CanvasKitInit')
@@ -2562,13 +2564,18 @@ external Object? get exports;
 @JS()
 external Object? get module;
 
-@JS('window.flutterCanvasKit.RuntimeEffect')
+@JS()
+@staticInterop
+class SkRuntimeEffectNamespace {}
+
+extension SkRuntimeEffectNamespaceExtension on SkRuntimeEffectNamespace {
+  external SkRuntimeEffect? MakeRuntimeEffect(String program);
+}
+
+@JS()
 @anonymous
 @staticInterop
 class SkRuntimeEffect {}
-
-@JS('window.flutterCanvasKit.RuntimeEffect.Make')
-external SkRuntimeEffect? MakeRuntimeEffect(String program);
 
 extension SkSkRuntimeEffectExtension on SkRuntimeEffect {
   external SkShader? makeShader(List<Object> uniforms);
