@@ -6,7 +6,38 @@ import 'dart:typed_data';
 
 import '../dom.dart';
 import '../text/line_breaker.dart';
+import '../util.dart';
 import 'canvaskit_api.dart';
+
+class Segmentation {
+  const Segmentation(this.words, this.graphemes, this.breaks);
+
+  final Uint32List words;
+  final Uint32List graphemes;
+  final Uint32List breaks;
+}
+
+// The number below were picked based on the following logic. Apps typically do
+// not put a lot of text in a single paragraph. 10000 UTF-16 characters (i.e.
+// 20kB) should be plenty. To avoid consuming too much memory strings longer
+// than 10000 will not be cached. The cache size 10000 amounts to a worst case
+// of 200MB, but that's highly unlikely, given that the vast majority of strings
+// will be small. Even if the cache is filled with 200-character long paragraphs
+// the cache will only consume 4MB. This logic assumes that the segmentation
+// information is << the size of string.
+//
+// This could be improved in the future. For example, we can maintain multiple
+// caches of different sizes that store strings of different lengths. For
+// example, we can have a cache of size 10 that stores very long strings, a
+// cache of 1000 that stores medium-length strings, and a cache of 10000 that
+// stores short strings.
+const int kCacheTextLengthLimit = 10000;
+const int kCacheSize = 10000;
+
+// Caches segmentation results. Paragraphs are frequently re-created because of
+// style or font changes, while their text contents remain the same. This cache
+// is effective at short-circuiting the segmentation of such paragraphs.
+final LruCache<String, Segmentation> segmentationCache = LruCache<String, Segmentation>(kCacheSize);
 
 /// Injects required ICU data into the [builder].
 ///
@@ -18,14 +49,38 @@ void injectClientICU(SkParagraphBuilder builder) {
     'This method should only be used with the CanvasKit Chromium variant.',
   );
 
-  final String text = builder.getText();
-  builder.setWordsUtf16(
-    fragmentUsingIntlSegmenter(text, IntlSegmenterGranularity.word),
-  );
-  builder.setGraphemeBreaksUtf16(
-    fragmentUsingIntlSegmenter(text, IntlSegmenterGranularity.grapheme),
-  );
-  builder.setLineBreaksUtf16(fragmentUsingV8LineBreaker(text));
+  final Segmentation segmentation = segmentText(builder.getText());
+  builder.setWordsUtf16(segmentation.words);
+  builder.setGraphemeBreaksUtf16(segmentation.graphemes);
+  builder.setLineBreaksUtf16(segmentation.breaks);
+}
+
+/// Segments the [text].
+///
+/// Caches results in [segmentationCache].
+Segmentation segmentText(String text) {
+  final Segmentation? cached = segmentationCache[text];
+  final Segmentation segmentation;
+
+  // Don't cache strings that are too big to avoid blowing up memory.
+  final bool exceedsTextLengthLimit = text.length > kCacheTextLengthLimit;
+
+  if (cached == null || exceedsTextLengthLimit) {
+    segmentation = Segmentation(
+      fragmentUsingIntlSegmenter(text, IntlSegmenterGranularity.word),
+      fragmentUsingIntlSegmenter(text, IntlSegmenterGranularity.grapheme),
+      fragmentUsingV8LineBreaker(text),
+    );
+  } else {
+    segmentation = cached;
+  }
+
+  if (!exceedsTextLengthLimit) {
+    // Save or promote to most recently used.
+    segmentationCache.cache(text, segmentation);
+  }
+
+  return segmentation;
 }
 
 /// The granularity at which to segment text.

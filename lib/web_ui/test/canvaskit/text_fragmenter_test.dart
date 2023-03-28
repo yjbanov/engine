@@ -101,4 +101,75 @@ void testMain() {
       );
     });
   }, skip: !browserSupportsCanvaskitChromium);
+
+  group('segmentText', () {
+    setUp(() {
+      segmentationCache.clear();
+    });
+
+    tearDown(() {
+      segmentationCache.clear();
+    });
+
+    test('segments correctly', () {
+      const String text = 'Lorem-ipsum 你好🙂\nDolor sit';
+      final Segmentation segmentation = segmentText(text);
+      expect(
+        segmentation.words,
+        fragmentUsingIntlSegmenter(text, IntlSegmenterGranularity.word),
+      );
+      expect(
+        segmentation.graphemes,
+        fragmentUsingIntlSegmenter(text, IntlSegmenterGranularity.grapheme),
+      );
+      expect(
+        segmentation.breaks,
+        fragmentUsingV8LineBreaker(text),
+      );
+    });
+
+    test('caches segmentation results in LRU fashion', () {
+      const String text1 = 'hello';
+      segmentText(text1);
+      expect(segmentationCache.debugItemQueue, hasLength(1));
+      expect(segmentationCache[text1], isNotNull);
+
+      const String text2 = 'world';
+      segmentText(text2);
+      expect(segmentationCache.debugItemQueue, hasLength(2));
+      expect(segmentationCache[text2], isNotNull);
+
+      // "world" was segmented last, so it should be first, as in most recently used.
+      expect(segmentationCache.debugItemQueue.first.$1, 'world');
+      expect(segmentationCache.debugItemQueue.last.$1, 'hello');
+    });
+
+    test('does not cache long text', () {
+      final String text1 = 'a' * (kCacheTextLengthLimit + 1);
+      segmentText(text1);
+      expect(segmentationCache.debugItemQueue, hasLength(0));
+
+      final String text2 = 'a' * kCacheTextLengthLimit;
+      segmentText(text2);
+      expect(segmentationCache.debugItemQueue, hasLength(1));
+      expect(segmentationCache[text2], isNotNull);
+    });
+
+    test('has a limit on the number of entries', () {
+      int totalCount = 0;
+      for (final String letter in const <String>['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']) {
+        for (final String digit in const <String>['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']) {
+          for (int count = 1; count <= 10000; count++) {
+            totalCount += 1;
+            final String text = letter * count;
+            segmentText(text);
+            expect(segmentationCache.debugItemQueue, hasLength(lessThanOrEqualTo(kCacheSize)));
+          }
+        }
+      }
+
+      expect(totalCount, 50000);
+      expect(segmentationCache.length, kCacheSize);
+    });
+  });
 }
