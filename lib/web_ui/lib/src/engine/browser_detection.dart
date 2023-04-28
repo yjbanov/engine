@@ -195,15 +195,6 @@ bool get isMacOrIOS =>
     operatingSystem == OperatingSystem.iOs ||
     operatingSystem == OperatingSystem.macOs;
 
-/// Detect iOS 15.
-bool get isIOS15 {
-  if (debugIsIOS15 != null) {
-    return debugIsIOS15!;
-  }
-  return operatingSystem == OperatingSystem.iOs &&
-      domWindow.navigator.userAgent.contains('OS 15_');
-}
-
 /// If set to true pretends that the current browser is iOS Safari.
 ///
 /// Useful for tests. Do not use in production code.
@@ -230,9 +221,6 @@ bool get isEdge => domWindow.navigator.userAgent.contains('Edg/');
 /// Note: Currently the ffi library is available from dart2wasm but not dart2js
 /// or dartdevc.
 bool get isWasm => const bool.fromEnvironment('dart.library.ffi');
-
-/// Use in tests to simulate the detection of iOS 15.
-bool? debugIsIOS15;
 
 int? _cachedWebGLVersion;
 

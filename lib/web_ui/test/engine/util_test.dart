@@ -41,9 +41,8 @@ void testMain() {
     expect(isIdentityFloat32ListTransform(rotation2d), isFalse);
   });
 
-  test('canonicalizes font families correctly on iOS (not 15)', () {
+  test('canonicalizes font families correctly on iOS', () {
     debugOperatingSystemOverride = OperatingSystem.iOs;
-    debugIsIOS15 = false;
 
     expect(
       canonicalizeFontFamily('sans-serif'),
@@ -59,28 +58,6 @@ void testMain() {
     );
 
     debugOperatingSystemOverride = null;
-    debugIsIOS15 = null;
-  });
-
-  test('does not use -apple-system on iOS 15', () {
-    debugOperatingSystemOverride = OperatingSystem.iOs;
-    debugIsIOS15 = true;
-
-    expect(
-      canonicalizeFontFamily('sans-serif'),
-      'sans-serif',
-    );
-    expect(
-      canonicalizeFontFamily('foo'),
-      '"foo", BlinkMacSystemFont, sans-serif',
-    );
-    expect(
-      canonicalizeFontFamily('.SF Pro Text'),
-      'BlinkMacSystemFont',
-    );
-
-    debugOperatingSystemOverride = null;
-    debugIsIOS15 = null;
   });
 
   test('parseFloat basic tests', () {
